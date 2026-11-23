@@ -1,0 +1,174 @@
+{% extends 'CELLRGrocery_app/base.html' %}
+{% block title %}Inventory - CELL-R Grocery{% endblock %}
+{% block page_title %}Product Inventory{% endblock %}
+
+{% block content %}
+<div class="card p-3 mb-3">
+    <form method="get" class="row g-2 align-items-center">
+        <div class="col-md-4">
+            <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Search product or barcode...">
+        </div>
+        <div class="col-md-3">
+            <select name="category" class="form-select">
+                <option value="">All Categories</option>
+                {% for cat in categories %}
+                    <option value="{{ cat }}" {% if category_filter == cat %}selected{% endif %}>{{ cat }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select name="status" class="form-select">
+                <option value="">All Statuses</option>
+                <option value="In Stock" {% if status_filter == 'In Stock' %}selected{% endif %}>In Stock</option>
+                <option value="Low Stock" {% if status_filter == 'Low Stock' %}selected{% endif %}>Low Stock</option>
+                <option value="Out of Stock" {% if status_filter == 'Out of Stock' %}selected{% endif %}>Out of Stock</option>
+            </select>
+        </div>
+        <div class="col-md-2 d-flex gap-1">
+            <button type="submit" class="btn btn-primary w-100">Filter</button>
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addProductModal"><i class="bi bi-plus-lg"></i></button>
+        </div>
+    </form>
+</div>
+
+<div class="card p-3">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Barcode</th>
+                    <th>Product Name</th>
+                    <th>Category</th>
+                    <th>Cost</th>
+                    <th>Selling Price</th>
+                    <th>Stock</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in products %}
+                <tr>
+                    <td class="small text-muted">{{ p.barcode_code|default:"—" }}</td>
+                    <td class="fw-semibold">{{ p.product_name }}</td>
+                    <td>{{ p.category }}</td>
+                    <td>₱{{ p.cost_price }}</td>
+                    <td class="fw-bold">₱{{ p.selling_price }}</td>
+                    <td>{{ p.stock_quantity }}</td>
+                    <td>
+                        {% if p.status == 'In Stock' %}
+                            <span class="badge bg-success">In Stock</span>
+                        {% elif p.status == 'Low Stock' %}
+                            <span class="badge bg-warning text-dark">Low Stock</span>
+                        {% else %}
+                            <span class="badge bg-danger">Out of Stock</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editModal{{ p.id }}"><i class="bi bi-pencil"></i></button>
+                        <form method="post" action="{% url 'product_delete' p.id %}" class="d-inline" onsubmit="return confirm('Delete {{ p.product_name }}?');">
+                            {% csrf_token %}
+                            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+
+                <!-- Edit Modal -->
+                <div class="modal fade" id="editModal{{ p.id }}" tabindex="-1">
+                    <div class="modal-dialog">
+                        <form method="post" action="{% url 'product_edit' p.id %}" class="modal-content">
+                            {% csrf_token %}
+                            <div class="modal-header">
+                                <h6 class="modal-title">Edit Product</h6>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body row g-2">
+                                <div class="col-6">
+                                    <label class="form-label small">Barcode</label>
+                                    <input type="text" name="barcode_code" value="{{ p.barcode_code|default:'' }}" class="form-control form-control-sm">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small">Category</label>
+                                    <input type="text" name="category" value="{{ p.category }}" class="form-control form-control-sm" required>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small">Product Name</label>
+                                    <input type="text" name="product_name" value="{{ p.product_name }}" class="form-control form-control-sm" required>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small">Cost Price (₱)</label>
+                                    <input type="number" step="0.01" name="cost_price" value="{{ p.cost_price }}" class="form-control form-control-sm" required>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small">Selling Price (₱)</label>
+                                    <input type="number" step="0.01" name="selling_price" value="{{ p.selling_price }}" class="form-control form-control-sm" required>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small">Stock Quantity</label>
+                                    <input type="number" name="stock_quantity" value="{{ p.stock_quantity }}" class="form-control form-control-sm" required>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small">Low Stock Threshold</label>
+                                    <input type="number" name="low_stock_threshold" value="{{ p.low_stock_threshold }}" class="form-control form-control-sm" required>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                {% empty %}
+                <tr><td colspan="8" class="text-center text-muted py-4">No products found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add Product Modal -->
+<div class="modal fade" id="addProductModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form method="post" action="{% url 'product_add' %}" class="modal-content">
+            {% csrf_token %}
+            <div class="modal-header">
+                <h6 class="modal-title">Add New Product</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body row g-2">
+                <div class="col-6">
+                    <label class="form-label small">Barcode</label>
+                    <input type="text" name="barcode_code" class="form-control form-control-sm">
+                </div>
+                <div class="col-6">
+                    <label class="form-label small">Category</label>
+                    <input type="text" name="category" class="form-control form-control-sm" placeholder="e.g. Canned Goods" required>
+                </div>
+                <div class="col-12">
+                    <label class="form-label small">Product Name</label>
+                    <input type="text" name="product_name" class="form-control form-control-sm" required>
+                </div>
+                <div class="col-6">
+                    <label class="form-label small">Cost Price (₱)</label>
+                    <input type="number" step="0.01" name="cost_price" class="form-control form-control-sm" required>
+                </div>
+                <div class="col-6">
+                    <label class="form-label small">Selling Price (₱)</label>
+                    <input type="number" step="0.01" name="selling_price" class="form-control form-control-sm" required>
+                </div>
+                <div class="col-6">
+                    <label class="form-label small">Initial Stock</label>
+                    <input type="number" name="stock_quantity" value="0" class="form-control form-control-sm" required>
+                </div>
+                <div class="col-6">
+                    <label class="form-label small">Low Stock Threshold</label>
+                    <input type="number" name="low_stock_threshold" value="10" class="form-control form-control-sm" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-success btn-sm">Add Product</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

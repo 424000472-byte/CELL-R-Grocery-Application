@@ -1,0 +1,81 @@
+{% extends 'CELLRGrocery_app/base.html' %}
+{% block title %}Utang / Credit Ledger - CELL-R Grocery{% endblock %}
+{% block page_title %}Customer Utang / Credit Management{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="card p-3">
+            <h6 class="fw-bold mb-3">Customer Credit Balances</h6>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Customer</th>
+                            <th>Contact</th>
+                            <th>Balance</th>
+                            <th class="text-end">Record Payment</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in customers %}
+                        <tr>
+                            <td class="fw-semibold">{{ c.customer_name }}</td>
+                            <td class="small">{{ c.contact_number|default:"—" }}</td>
+                            <td class="fw-bold {% if c.current_credit_balance > 0 %}text-danger{% else %}text-success{% endif %}">
+                                ₱{{ c.current_credit_balance|floatformat:2 }}
+                            </td>
+                            <td class="text-end">
+                                {% if c.current_credit_balance > 0 %}
+                                <form method="post" action="{% url 'utang_pay' c.id %}" class="d-flex justify-content-end gap-1">
+                                    {% csrf_token %}
+                                    <input type="number" step="0.01" max="{{ c.current_credit_balance }}" name="payment_amount" class="form-control form-control-sm" style="width: 95px;" placeholder="Amount" required>
+                                    <button type="submit" class="btn btn-sm btn-success">Pay</button>
+                                </form>
+                                {% else %}
+                                <span class="badge bg-light text-muted">Settled</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4" class="text-center text-muted py-4">No customers registered.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card p-3">
+            <h6 class="fw-bold mb-3">Credit & Payment History</h6>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date</th>
+                            <th>Customer</th>
+                            <th>Credit (+)</th>
+                            <th>Paid (-)</th>
+                            <th>Remaining</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in records %}
+                        <tr>
+                            <td class="small">{{ r.record_date|date:"M d, H:i" }}</td>
+                            <td class="fw-semibold">{{ r.customer.customer_name }}</td>
+                            <td class="text-danger">{% if r.credit_amount > 0 %}+₱{{ r.credit_amount }}{% else %}—{% endif %}</td>
+                            <td class="text-success">{% if r.payment_amount > 0 %}-₱{{ r.payment_amount }}{% else %}—{% endif %}</td>
+                            <td class="fw-bold">₱{{ r.remaining_balance }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="text-center text-muted py-4">No credit history yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
