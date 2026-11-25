@@ -53,4 +53,62 @@ cd CELL-R-Grocery-Application
   ```
   *(If PowerShell blocks script execution, run `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser` once, then re-run `venv\Scripts\activate`.)*
 
--
+- **macOS / Linux:**
+  ```bash
+  python3 -m venv venv
+  source venv/bin/activate
+  ```
+
+### 4. Install Required Packages
+With `(venv)` active in your terminal, install the project dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+*(If `requirements.txt` is not present, install Django directly via `pip install django`.)*
+
+### 5. Set Up the Database
+Apply the Django database migrations (and optionally load sample grocery data):
+
+```bash
+python manage.py migrate
+python manage.py seed_demo
+```
+
+### 6. Start the Local Development Server
+Launch the Django server:
+
+```bash
+python manage.py runserver
+```
+
+### 7. Open the Application in Your Browser
+Navigate to:
+```text
+[http://127.0.0.1:8000/](http://127.0.0.1:8000/)
+```
+
+---
+
+## Default Login Credentials
+
+- **Administrator Account:** `admin` / `admin123`
+- **Staff / Cashier Accounts:** Managed by an Administrator under **Settings > System User Accounts** or via `/admin/`.
+
+---
+
+## Project Structure
+
+```text
+CELL-R-Grocery-Application/
+├── core/                         # Django project settings & root URL configuration
+├── CELLRGrocery_app/             # Main POS, Inventory, Utang & Reports application
+│   ├── migrations/               # Database schema migrations
+│   ├── templates/                # Sky-blue & white UI HTML templates (base.html, pos.html, etc.)
+│   ├── models.py                 # Product, SaleTransaction, CreditRecord, Supplier & User models
+│   ├── views.py                  # View controllers & @admin_required RBAC decorator
+│   └── urls.py                   # Application URL routes
+├── db.sqlite3                    # Local SQLite database
+├── manage.py                     # Django management CLI utility
+└── README.md                     # Setup & documentation guide
+```
