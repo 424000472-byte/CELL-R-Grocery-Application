@@ -1,53 +1,56 @@
 # CELL-R Grocery POS & Inventory Management System
 
-A Django web-based Point of Sale (POS), Inventory, Supplier Stock-In, and Customer Credit (*Utang*) Management System designed for **CELL-R Grocery Store**.
+A web-based Point of Sale (POS), Inventory Catalog, Stock-In Replenishment, *Utang* (Customer Credit) Ledger, and Sales Reporting system built with **Python (Django)** and **SQLite** for **CELL-R Grocery Store (Quiapo, Manila, Philippines)**.
 
-## Features
-- **Authentication & Role Management:** Login portal with `Administrator` and `Cashier` role permissions.
-- **Dashboard:** Real-time KPIs for today's sales, transaction count, low-stock alerts, and outstanding *utang* balances.
-- **Point of Sale (POS):** Product search, barcode filtering, discount handling, Cash/E-Wallet/*Utang* checkouts, and automatic stock deduction.
-- **Inventory Management:** Full CRUD for products with automatic `In Stock`, `Low Stock`, and `Out of Stock` status tags.
-- **Stock-In & Suppliers:** Log incoming supplier shipments and automatically update inventory counts and unit costs.
-- **Utang / Credit Ledger:** Track customer credit balances and record partial or full payments.
-- **Reports & Settings:** Daily/weekly sales summaries, 7-day trend chart, top-selling items, CSV report export, and SQLite database backup.
+---
 
-## Team Members (CELL-R)
-- Esteban, Maria Victoria N.
-- Caliguran, Ayane
-- Cricoto, Angel Christian
-- Tarnate, Athea Glaize
-- Riza, Christina
-- Cala, Jonnel
-- Lagrismos, Don
+## Tech Stack
 
-## Setup & Installation
+- **Backend:** Python 3.12+, Django 6.1
+- **Database:** SQLite (`db.sqlite3`)
+- **Frontend:** HTML5, CSS3, Bootstrap 5.3, Bootstrap Icons, Vanilla JavaScript
 
-1. **Clone the repository:**
-   ```bash
-   git clone <your-github-repo-url>
-   cd CELLR_Grocery_POS_GitHub
-   ```
+---
 
-2. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
+## Core Modules & Role-Based Access Control (RBAC)
 
-3. **Apply database migrations:**
-   ```bash
-   python manage.py makemigrations
-   python manage.py migrate
-   ```
+| Module | Route | Administrator | Cashier |
+| :--- | :--- | :---: | :---: |
+| **Dashboard** | `/` | Full Access | Read-Only Overview |
+| **POS / Create Bill** | `/pos/` | Full Access | Full Access |
+| **Inventory Catalog** | `/inventory/` | Full CRUD (Add/Edit/Delete) | View & Search Only |
+| **Utang / Customers** | `/utang/` | Full Access | View & Record Payments |
+| **Stock-In & Orders** | `/purchase-orders/` | Full Access | Restricted |
+| **Sales Reports & CSV** | `/reports/` | Full Access | Restricted |
+| **System Settings & Backup** | `/settings/` | Full Access | Restricted |
 
-4. **Load sample demo accounts & products:**
-   ```bash
-   python manage.py seed_demo
-   ```
-   * **Admin Login:** `admin` / `admin123`
-   * **Cashier Login:** `cashier1` / `cashier123`
+---
 
-5. **Run the server:**
-   ```bash
-   python manage.py runserver
-   ```
-   Open `http://127.0.0.1:8000/` in your browser.
+## How to Run This Project on Another Laptop or PC
+
+Follow these steps to clone and run the application locally on a new Windows, macOS, or Linux machine:
+
+### 1. Prerequisites
+Ensure the target computer has the following installed:
+- **Python 3.12 or higher** *(On Windows, check **"Add Python to PATH"** during installation)*
+- **Git** ([git-scm.com](https://git-scm.com/))
+- **A modern web browser** (Google Chrome, Microsoft Edge, or Firefox)
+
+### 2. Clone the Repository
+Open **Terminal**, **Command Prompt**, or **PowerShell** and run:
+
+```bash
+git clone [https://github.com/424000472-byte/CELL-R-Grocery-Application.git](https://github.com/424000472-byte/CELL-R-Grocery-Application.git)
+cd CELL-R-Grocery-Application
+```
+
+### 3. Create and Activate a Virtual Environment
+
+- **Windows (PowerShell / Command Prompt):**
+  ```bash
+  python -m venv venv
+  venv\Scripts\activate
+  ```
+  *(If PowerShell blocks script execution, run `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser` once, then re-run `venv\Scripts\activate`.)*
+
+-
