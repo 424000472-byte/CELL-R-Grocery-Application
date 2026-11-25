@@ -1,94 +1,234 @@
 {% extends 'CELLRGrocery_app/base.html' %}
 {% block title %}Settings - CELL-R Grocery{% endblock %}
-{% block page_title %}Store Administration & Settings{% endblock %}
+{% block page_title %}Store & System Settings{% endblock %}
+
+{% block extra_css %}
+<style>
+    .settings-panel {
+        background: #ffffff;
+        border: 1px solid #e6eef5;
+        border-radius: 20px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03);
+    }
+
+    .settings-icon-box {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        background: #e6f4fe;
+        color: #4aa8eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.15rem;
+        flex-shrink: 0;
+    }
+
+    .user-row-card {
+        background: #ffffff;
+        border: 1px solid #eaf0f6;
+        border-radius: 14px;
+        padding: 0.75rem 1rem;
+        margin-bottom: 0.6rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        transition: all 0.16s ease;
+    }
+
+    .user-row-card:hover {
+        background: #4aa8eb;
+        border-color: #4aa8eb;
+        color: #ffffff;
+    }
+
+    .user-row-card:hover .text-muted {
+        color: rgba(255, 255, 255, 0.85) !important;
+    }
+
+    .staff-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        background: #e6f4fe;
+        color: #4aa8eb;
+        font-weight: 700;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .user-row-card:hover .staff-avatar {
+        background: rgba(255, 255, 255, 0.22);
+        color: #ffffff;
+    }
+
+    .role-dot-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.38rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.3rem 0.7rem;
+        border-radius: 999px;
+    }
+
+    .role-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+    }
+
+    .role-admin { background: #e6f4fe; color: #2b8fd9; }
+    .role-admin .role-dot { background: #4aa8eb; }
+
+    .role-cashier { background: #fffbeb; color: #d97706; }
+    .role-cashier .role-dot { background: #f59e0b; }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="row g-3">
-    <div class="col-lg-5">
-        <div class="card p-3 mb-3">
-            <h6 class="fw-bold mb-3">Store Information</h6>
+<div class="row g-4">
+    <!-- Left Column: Store Information & Database Backup -->
+    <div class="col-lg-6 d-flex flex-column gap-4">
+        <div class="settings-panel">
+            <div class="d-flex align-items-center gap-2 mb-4">
+                <div class="settings-icon-box"><i class="bi bi-shop"></i></div>
+                <div>
+                    <h5 class="fw-bold mb-0">Store Information</h5>
+                    <span class="text-muted small">Displayed on receipts and system header</span>
+                </div>
+            </div>
+
             <form method="post">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="update_store">
-                <div class="mb-2">
-                    <label class="form-label small fw-semibold">Store Name</label>
-                    <input type="text" name="store_name" value="{{ store_settings.store_name }}" class="form-control form-control-sm">
-                </div>
-                <div class="mb-2">
-                    <label class="form-label small fw-semibold">Address</label>
-                    <input type="text" name="address" value="{{ store_settings.address }}" class="form-control form-control-sm">
-                </div>
-                <div class="mb-2">
-                    <label class="form-label small fw-semibold">Contact Number</label>
-                    <input type="text" name="contact_number" value="{{ store_settings.contact_number }}" class="form-control form-control-sm">
-                </div>
+
                 <div class="mb-3">
-                    <label class="form-label small fw-semibold">Receipt Footer Message</label>
-                    <input type="text" name="receipt_footer" value="{{ store_settings.receipt_footer }}" class="form-control form-control-sm">
+                    <label class="form-label small fw-semibold text-secondary">Store Name</label>
+                    <input type="text" name="store_name" value="{{ store_settings.store_name }}" class="form-control" required>
                 </div>
-                <button type="submit" class="btn btn-primary btn-sm">Update Store Info</button>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">Store Address</label>
+                    <input type="text" name="address" value="{{ store_settings.address }}" class="form-control">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold text-secondary">Contact Number</label>
+                    <input type="text" name="contact_number" value="{{ store_settings.contact_number }}" class="form-control">
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label small fw-semibold text-secondary">Receipt Footer Note</label>
+                    <input type="text" name="receipt_footer" value="{{ store_settings.receipt_footer }}" class="form-control">
+                </div>
+
+                <button type="submit" class="btn-sky px-4">
+                    <i class="bi bi-check2-circle"></i> Save Store Details
+                </button>
             </form>
         </div>
 
-        <div class="card p-3">
-            <h6 class="fw-bold mb-2">Database Backup</h6>
-            <p class="small text-muted">Download a copy of the SQLite database (`db.sqlite3`) for safekeeping.</p>
-            <a href="{% url 'backup_database' %}" class="btn btn-outline-dark btn-sm"><i class="bi bi-download me-1"></i> Download Database Backup</a>
+        <!-- Database Backup Card -->
+        <div class="settings-panel">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="settings-icon-box"><i class="bi bi-database-check"></i></div>
+                    <div>
+                        <h6 class="fw-bold mb-0">Database Backup</h6>
+                        <span class="text-muted small">Download a local copy of your SQLite records</span>
+                    </div>
+                </div>
+                <a href="{% url 'backup_database' %}" class="btn-pill-white">
+                    <i class="bi bi-download"></i> Download .sqlite3
+                </a>
+            </div>
         </div>
     </div>
 
-    <div class="col-lg-7">
-        <div class="card p-3 mb-3">
-            <h6 class="fw-bold mb-3">Add Staff / Admin Account</h6>
-            <form method="post" class="row g-2">
+    <!-- Right Column: Create User & User Directory -->
+    <div class="col-lg-6 d-flex flex-column gap-4">
+        <div class="settings-panel">
+            <div class="d-flex align-items-center gap-2 mb-4">
+                <div class="settings-icon-box"><i class="bi bi-person-plus"></i></div>
+                <div>
+                    <h5 class="fw-bold mb-0">Create Staff Account</h5>
+                    <span class="text-muted small">Add a new Administrator or Cashier login</span>
+                </div>
+            </div>
+
+            <form method="post">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="create_user">
-                <div class="col-md-6">
-                    <input type="text" name="first_name" class="form-control form-control-sm" placeholder="First Name">
+
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold text-secondary">First Name</label>
+                        <input type="text" name="first_name" class="form-control" placeholder="e.g. Maria">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold text-secondary">Last Name</label>
+                        <input type="text" name="last_name" class="form-control" placeholder="e.g. Santos">
+                    </div>
                 </div>
-                <div class="col-md-6">
-                    <input type="text" name="last_name" class="form-control form-control-sm" placeholder="Last Name">
+
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold text-secondary">Username</label>
+                        <input type="text" name="username" class="form-control" placeholder="e.g. cashier2" required>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold text-secondary">Password</label>
+                        <input type="password" name="password" class="form-control" placeholder="Enter password" required>
+                    </div>
                 </div>
-                <div class="col-md-4">
-                    <input type="text" name="username" class="form-control form-control-sm" placeholder="Username" required>
-                </div>
-                <div class="col-md-4">
-                    <input type="password" name="password" class="form-control form-control-sm" placeholder="Password" required>
-                </div>
-                <div class="col-md-4">
-                    <select name="role" class="form-select form-select-sm">
-                        <option value="Cashier">Cashier</option>
-                        <option value="Administrator">Administrator</option>
+
+                <div class="mb-4">
+                    <label class="form-label small fw-semibold text-secondary">Role & Permissions</label>
+                    <select name="role" class="form-select">
+                        <option value="Cashier">Cashier (POS, Inventory View, Utang Ledger)</option>
+                        <option value="Administrator">Administrator (Full System Access)</option>
                     </select>
                 </div>
-                <div class="col-12">
-                    <button type="submit" class="btn btn-success btn-sm">Create User Account</button>
-                </div>
+
+                <button type="submit" class="btn-sky px-4">
+                    <i class="bi bi-plus-circle"></i> Create Account
+                </button>
             </form>
         </div>
 
-        <div class="card p-3">
-            <h6 class="fw-bold mb-3">Registered Accounts & Role Permissions</h6>
-            <table class="table table-sm align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>Username</th>
-                        <th>Full Name</th>
-                        <th>Role</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for u in users %}
-                    <tr>
-                        <td class="fw-semibold">{{ u.username }}</td>
-                        <td>{{ u.first_name }} {{ u.last_name }}</td>
-                        <td><span class="badge {% if u.role == 'Administrator' %}bg-primary{% else %}bg-secondary{% endif %}">{{ u.role }}</span></td>
-                        <td>{% if u.is_active %}<span class="text-success small">Active</span>{% else %}<span class="text-muted small">Inactive</span>{% endif %}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <!-- Existing Users List -->
+        <div class="settings-panel">
+            <div class="d-flex align-items-center gap-2 mb-3">
+                <div class="settings-icon-box"><i class="bi bi-shield-lock"></i></div>
+                <div>
+                    <h6 class="fw-bold mb-0">System User Accounts</h6>
+                    <span class="text-muted small">{{ users|length }} active accounts</span>
+                </div>
+            </div>
+
+            {% for u in users %}
+            <div class="user-row-card">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="staff-avatar">{{ u.username|slice:":1"|upper }}</div>
+                    <div>
+                        <div class="fw-bold small">{{ u.first_name }} {{ u.last_name }} <span class="text-muted fw-normal">(@{{ u.username }})</span></div>
+                        <div class="text-muted" style="font-size: 0.73rem;">Last login: {{ u.last_login|date:"M d, Y h:i A"|default:"Never" }}</div>
+                    </div>
+                </div>
+
+                {% if u.role == 'Administrator' or u.is_superuser %}
+                    <span class="role-dot-pill role-admin"><span class="role-dot"></span>Administrator</span>
+                {% else %}
+                    <span class="role-dot-pill role-cashier"><span class="role-dot"></span>Cashier</span>
+                {% endif %}
+            </div>
+            {% endfor %}
         </div>
     </div>
 </div>

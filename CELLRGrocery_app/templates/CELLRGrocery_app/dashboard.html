@@ -1,83 +1,454 @@
 {% extends 'CELLRGrocery_app/base.html' %}
 {% block title %}Dashboard - CELL-R Grocery{% endblock %}
-{% block page_title %}Store Dashboard{% endblock %}
+{% block page_title %}Store Overview{% endblock %}
+
+{% block extra_css %}
+<style>
+    .kpi-card {
+        background: #ffffff;
+        border: 1px solid #e6eef5;
+        border-radius: 20px;
+        padding: 1.25rem 1.35rem;
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        height: 100%;
+        transition: transform 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    .kpi-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 22px rgba(74, 168, 235, 0.14);
+    }
+
+    .kpi-icon {
+        width: 46px;
+        height: 46px;
+        border-radius: 14px;
+        background: #e6f4fe;
+        color: #4aa8eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        flex-shrink: 0;
+    }
+
+    .kpi-icon.warn {
+        background: #fffbeb;
+        color: #f59e0b;
+    }
+
+    .kpi-icon.credit {
+        background: #fef2f2;
+        color: #ef4444;
+    }
+
+    .kpi-label {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #64748b;
+        margin-bottom: 0.2rem;
+    }
+
+    .kpi-value {
+        font-size: 1.45rem;
+        font-weight: 700;
+        color: #1e293b;
+        letter-spacing: -0.02em;
+        line-height: 1.15;
+    }
+
+    .kpi-sub {
+        font-size: 0.73rem;
+        color: #94a3b8;
+        margin-top: 0.25rem;
+    }
+
+    .dash-panel {
+        background: #ffffff;
+        border: 1px solid #e6eef5;
+        border-radius: 20px;
+        padding: 1.45rem;
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03);
+        height: 100%;
+    }
+
+    .panel-icon-box {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        background: #e6f4fe;
+        color: #4aa8eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.15rem;
+        flex-shrink: 0;
+    }
+
+    /* Recent Transactions Row-Cards */
+    .tx-row-card {
+        background: #ffffff;
+        border: 1px solid #eaf0f6;
+        border-radius: 16px;
+        padding: 0.85rem 1.1rem;
+        margin-bottom: 0.65rem;
+        display: grid;
+        grid-template-columns: 2fr 1.1fr 1.1fr auto;
+        align-items: center;
+        gap: 0.85rem;
+        transition: all 0.18s ease;
+    }
+
+    .tx-row-card:hover {
+        background: #4aa8eb;
+        border-color: #4aa8eb;
+        color: #ffffff;
+        transform: translateY(-1px);
+        box-shadow: 0 8px 20px rgba(74, 168, 235, 0.24);
+    }
+
+    .tx-thumb {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        background: #f1f6fa;
+        color: #4aa8eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+        transition: all 0.18s ease;
+    }
+
+    .tx-row-card:hover .tx-thumb {
+        background: rgba(255, 255, 255, 0.22);
+        color: #ffffff;
+    }
+
+    .micro-label {
+        font-size: 0.72rem;
+        color: #64748b;
+        margin-bottom: 2px;
+        transition: color 0.18s ease;
+    }
+
+    .micro-value {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #1e293b;
+        transition: color 0.18s ease;
+    }
+
+    .tx-row-card:hover .micro-label {
+        color: rgba(255, 255, 255, 0.85);
+    }
+
+    .tx-row-card:hover .micro-value,
+    .tx-row-card:hover .tx-title {
+        color: #ffffff;
+    }
+
+    .status-dot-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.76rem;
+        font-weight: 600;
+        padding: 0.34rem 0.75rem;
+        border-radius: 999px;
+    }
+
+    .status-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+    }
+
+    .pay-cash { color: #16a34a; background: #f0fdf4; }
+    .pay-cash .status-dot { background: #16a34a; }
+
+    .pay-utang { color: #d97706; background: #fffbeb; }
+    .pay-utang .status-dot { background: #f59e0b; }
+
+    /* Quick Action Row Links */
+    .quick-action-card {
+        background: #f8fbfe;
+        border: 1px solid #e6eef5;
+        border-radius: 15px;
+        padding: 0.85rem 1rem;
+        margin-bottom: 0.65rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        text-decoration: none;
+        color: #1e293b;
+        transition: all 0.16s ease;
+    }
+
+    .quick-action-card:hover {
+        background: #4aa8eb;
+        border-color: #4aa8eb;
+        color: #ffffff;
+        transform: translateX(3px);
+        box-shadow: 0 6px 16px rgba(74, 168, 235, 0.24);
+    }
+
+    .quick-action-card:hover .text-muted {
+        color: rgba(255, 255, 255, 0.85) !important;
+    }
+
+    .quick-action-card:hover .qa-icon {
+        background: rgba(255, 255, 255, 0.22);
+        color: #ffffff;
+    }
+
+    .qa-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 11px;
+        background: #e6f4fe;
+        color: #4aa8eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.05rem;
+        flex-shrink: 0;
+        transition: all 0.16s ease;
+    }
+
+    .alert-banner-box {
+        background: #f4f8fb;
+        border: 1px solid #e6eef5;
+        border-radius: 16px;
+        padding: 1rem 1.1rem;
+        margin-top: 1rem;
+    }
+
+    @media (max-width: 768px) {
+        .tx-row-card {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<!-- KPI Cards -->
+<!-- Top 4 KPI Summary Cards -->
 <div class="row g-3 mb-4">
-    <div class="col-md-3">
-        <div class="card p-3 border-start border-primary border-4">
-            <div class="text-muted small fw-semibold">TODAY'S SALES</div>
-            <h3 class="fw-bold mt-1 mb-0">₱{{ todays_sales|floatformat:2 }}</h3>
+    <div class="col-xl-3 col-sm-6">
+        <div class="kpi-card">
+            <div>
+                <div class="kpi-label">Today's Sales</div>
+                <div class="kpi-value">₱{{ todays_sales|floatformat:2 }}</div>
+                <div class="kpi-sub">Gross revenue today</div>
+            </div>
+            <div class="kpi-icon">
+                <i class="bi bi-cash-coin"></i>
+            </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card p-3 border-start border-success border-4">
-            <div class="text-muted small fw-semibold">TRANSACTIONS TODAY</div>
-            <h3 class="fw-bold mt-1 mb-0">{{ todays_count }}</h3>
+
+    <div class="col-xl-3 col-sm-6">
+        <div class="kpi-card">
+            <div>
+                <div class="kpi-label">Transactions</div>
+                <div class="kpi-value">{{ todays_count }}</div>
+                <div class="kpi-sub">Completed bills today</div>
+            </div>
+            <div class="kpi-icon">
+                <i class="bi bi-receipt-cutoff"></i>
+            </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card p-3 border-start border-warning border-4">
-            <div class="text-muted small fw-semibold">LOW / OUT OF STOCK</div>
-            <h3 class="fw-bold mt-1 mb-0 text-warning">{{ low_stock_count }}</h3>
-        </div>
+
+    <div class="col-xl-3 col-sm-6">
+        <a href="{% url 'inventory_list' %}?status=Low+Stock" class="text-decoration-none">
+            <div class="kpi-card">
+                <div>
+                    <div class="kpi-label">Low Stock Items</div>
+                    <div class="kpi-value">{{ low_stock_count }}</div>
+                    <div class="kpi-sub">Click to inspect stock</div>
+                </div>
+                <div class="kpi-icon warn">
+                    <i class="bi bi-exclamation-triangle"></i>
+                </div>
+            </div>
+        </a>
     </div>
-    <div class="col-md-3">
-        <div class="card p-3 border-start border-danger border-4">
-            <div class="text-muted small fw-semibold">OUTSTANDING UTANG</div>
-            <h3 class="fw-bold mt-1 mb-0 text-danger">₱{{ outstanding_utang|floatformat:2 }}</h3>
-        </div>
+
+    <div class="col-xl-3 col-sm-6">
+        <a href="{% url 'utang_list' %}" class="text-decoration-none">
+            <div class="kpi-card">
+                <div>
+                    <div class="kpi-label">Outstanding Utang</div>
+                    <div class="kpi-value">₱{{ outstanding_utang|floatformat:2 }}</div>
+                    <div class="kpi-sub">Total customer credit</div>
+                </div>
+                <div class="kpi-icon credit">
+                    <i class="bi bi-journal-bookmark"></i>
+                </div>
+            </div>
+        </a>
     </div>
 </div>
 
-<!-- Quick-Action Shortcuts -->
-<div class="card p-3 mb-4">
-    <h6 class="fw-bold mb-3">Quick Actions</h6>
-    <div class="d-flex flex-wrap gap-2">
-        <a href="{% url 'pos' %}" class="btn btn-primary"><i class="bi bi-plus-circle me-1"></i> New Sale (POS)</a>
-        <a href="{% url 'inventory_list' %}" class="btn btn-outline-secondary"><i class="bi bi-box-seam me-1"></i> Add / Manage Products</a>
-        <a href="{% url 'purchase_orders' %}" class="btn btn-outline-success"><i class="bi bi-truck me-1"></i> Record Stock-In</a>
-        <a href="{% url 'reports' %}" class="btn btn-outline-info"><i class="bi bi-file-earmark-bar-graph me-1"></i> View Reports</a>
-    </div>
-</div>
+<!-- Main Two-Column Content -->
+<div class="row g-4">
+    <!-- Left Column: Recent POS Transactions -->
+    <div class="col-lg-8">
+        <div class="dash-panel">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="panel-icon-box"><i class="bi bi-clock-history"></i></div>
+                    <div>
+                        <h5 class="fw-bold mb-0">Recent Transactions</h5>
+                        <span class="text-muted small">Latest 8 POS sales recorded</span>
+                    </div>
+                </div>
+                <a href="{% url 'pos' %}" class="btn-sky">
+                    <i class="bi bi-plus-circle"></i> New POS Sale
+                </a>
+            </div>
 
-<!-- Recent Transactions -->
-<div class="card p-3">
-    <h6 class="fw-bold mb-3">Recent Sales Transactions</h6>
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
-                <tr>
-                    <th>Sale #</th>
-                    <th>Date & Time</th>
-                    <th>Customer</th>
-                    <th>Cashier</th>
-                    <th>Method</th>
-                    <th class="text-end">Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for tx in recent_transactions %}
-                <tr>
-                    <td class="fw-semibold">#{{ tx.id }}</td>
-                    <td>{{ tx.transaction_datetime|date:"M d, Y H:i" }}</td>
-                    <td>{{ tx.customer.customer_name|default:"Walk-in Customer" }}</td>
-                    <td>{{ tx.user.username|default:"—" }}</td>
-                    <td>
-                        {% if tx.payment_method == 'Utang' %}
-                            <span class="badge bg-danger">Utang</span>
-                        {% else %}
-                            <span class="badge bg-success">{{ tx.payment_method }}</span>
-                        {% endif %}
-                    </td>
-                    <td class="text-end fw-bold">₱{{ tx.total_amount|floatformat:2 }}</td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="6" class="text-center text-muted py-4">No sales recorded yet.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
+            {% for tx in recent_transactions %}
+            <div class="tx-row-card">
+                <!-- Receipt ID & Customer -->
+                <div class="d-flex align-items-center gap-3">
+                    <div class="tx-thumb">
+                        <i class="bi bi-bag-check"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold tx-title">Sale #{{ tx.id }} • {{ tx.customer.customer_name|default:"Walk-in Customer" }}</div>
+                        <div class="micro-label">{{ tx.transaction_datetime|date:"M d, Y • h:i A" }}</div>
+                    </div>
+                </div>
+
+                <!-- Cashier -->
+                <div>
+                    <div class="micro-label">Processed By</div>
+                    <div class="micro-value">{{ tx.user.first_name|default:tx.user.username }}</div>
+                </div>
+
+                <!-- Total Amount -->
+                <div>
+                    <div class="micro-label">Total Paid</div>
+                    <div class="micro-value">₱{{ tx.total_amount|floatformat:2 }}</div>
+                </div>
+
+                <!-- Payment Method Dot Pill -->
+                <div class="text-end">
+                    {% if tx.payment_method == 'Cash' %}
+                        <span class="status-dot-pill pay-cash"><span class="status-dot"></span>Cash</span>
+                    {% else %}
+                        <span class="status-dot-pill pay-utang"><span class="status-dot"></span>Utang</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center text-muted py-5 small">
+                No sales transactions recorded yet. Click <strong>New POS Sale</strong> to start.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Right Column: Quick Shortcuts & Stock Status -->
+    <div class="col-lg-4">
+        <div class="dash-panel">
+            <div class="d-flex align-items-center gap-2 mb-4">
+                <div class="panel-icon-box"><i class="bi bi-lightning-charge"></i></div>
+                <div>
+                    <h5 class="fw-bold mb-0">Quick Actions</h5>
+                    <span class="text-muted small">Shortcuts for {{ request.user.role }}</span>
+                </div>
+            </div>
+
+            <a href="{% url 'pos' %}" class="quick-action-card">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="qa-icon"><i class="bi bi-cart-check"></i></div>
+                    <div>
+                        <div class="fw-bold small">Open POS Terminal</div>
+                        <div class="text-muted" style="font-size: 0.74rem;">Scan barcodes & create customer bill</div>
+                    </div>
+                </div>
+                <i class="bi bi-chevron-right small"></i>
+            </a>
+
+            <a href="{% url 'inventory_list' %}" class="quick-action-card">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="qa-icon"><i class="bi bi-box-seam"></i></div>
+                    <div>
+                        <div class="fw-bold small">Check Product Inventory</div>
+                        <div class="text-muted" style="font-size: 0.74rem;">Search prices & available stock</div>
+                    </div>
+                </div>
+                <i class="bi bi-chevron-right small"></i>
+            </a>
+
+            <a href="{% url 'utang_list' %}" class="quick-action-card">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="qa-icon"><i class="bi bi-journal-check"></i></div>
+                    <div>
+                        <div class="fw-bold small">Utang / Credit Ledger</div>
+                        <div class="text-muted" style="font-size: 0.74rem;">View balances & record payments</div>
+                    </div>
+                </div>
+                <i class="bi bi-chevron-right small"></i>
+            </a>
+
+            {% if request.user.role == 'Administrator' or request.user.is_superuser %}
+            <a href="{% url 'purchase_orders' %}" class="quick-action-card">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="qa-icon"><i class="bi bi-truck"></i></div>
+                    <div>
+                        <div class="fw-bold small">Record Stock-In Delivery</div>
+                        <div class="text-muted" style="font-size: 0.74rem;">Restock items from suppliers</div>
+                    </div>
+                </div>
+                <i class="bi bi-chevron-right small"></i>
+            </a>
+
+            <a href="{% url 'reports' %}" class="quick-action-card">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="qa-icon"><i class="bi bi-bar-chart-line"></i></div>
+                    <div>
+                        <div class="fw-bold small">View Sales Analytics</div>
+                        <div class="text-muted" style="font-size: 0.74rem;">7-day charts & CSV export</div>
+                    </div>
+                </div>
+                <i class="bi bi-chevron-right small"></i>
+            </a>
+            {% endif %}
+
+            <!-- Stock Alert Summary Box -->
+            <div class="alert-banner-box">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="fw-bold small"><i class="bi bi-bell text-warning me-1"></i>Inventory Watch</span>
+                    <span class="badge rounded-pill" style="background: #e6f4fe; color: #2b8fd9;">{{ low_stock_count }} Alert{{ low_stock_count|pluralize }}</span>
+                </div>
+                <p class="text-muted mb-2" style="font-size: 0.76rem;">
+                    {% if low_stock_count > 0 %}
+                        {{ low_stock_count }} product{{ low_stock_count|pluralize }} are at or below their low-stock threshold.
+                    {% else %}
+                        All catalog items are currently well-stocked.
+                    {% endif %}
+                </p>
+                {% if request.user.role == 'Administrator' or request.user.is_superuser %}
+                    <a href="{% url 'purchase_orders' %}" class="small fw-semibold text-decoration-none" style="color: #4aa8eb;">
+                        Restock via Stock-In &rarr;
+                    </a>
+                {% else %}
+                    <a href="{% url 'inventory_list' %}?status=Low+Stock" class="small fw-semibold text-decoration-none" style="color: #4aa8eb;">
+                        View Low Stock List &rarr;
+                    </a>
+                {% endif %}
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

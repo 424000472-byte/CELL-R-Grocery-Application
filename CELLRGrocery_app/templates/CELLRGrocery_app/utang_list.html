@@ -1,81 +1,314 @@
 {% extends 'CELLRGrocery_app/base.html' %}
-{% block title %}Utang / Credit Ledger - CELL-R Grocery{% endblock %}
-{% block page_title %}Customer Utang / Credit Management{% endblock %}
+{% block title %}Utang / Credit - CELL-R Grocery{% endblock %}
+{% block page_title %}Utang / Customer Credit Ledger{% endblock %}
+
+{% block extra_css %}
+<style>
+    .utang-panel {
+        background: #ffffff;
+        border: 1px solid #e6eef5;
+        border-radius: 20px;
+        padding: 1.4rem;
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03);
+        height: 100%;
+    }
+
+    .utang-icon-box {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        background: #e6f4fe;
+        color: #4aa8eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.15rem;
+        flex-shrink: 0;
+    }
+
+    .customer-row-card {
+        background: #ffffff;
+        border: 1px solid #eaf0f6;
+        border-radius: 16px;
+        padding: 0.9rem 1.1rem;
+        margin-bottom: 0.65rem;
+        display: grid;
+        grid-template-columns: 1.8fr 1fr 1fr auto;
+        align-items: center;
+        gap: 0.75rem;
+        transition: all 0.18s ease;
+    }
+
+    .customer-row-card:hover {
+        background: #4aa8eb;
+        border-color: #4aa8eb;
+        color: #ffffff;
+        transform: translateY(-1px);
+        box-shadow: 0 8px 20px rgba(74, 168, 235, 0.24);
+    }
+
+    .cust-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        background: #f1f6fa;
+        color: #4aa8eb;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: all 0.18s ease;
+    }
+
+    .customer-row-card:hover .cust-avatar {
+        background: rgba(255, 255, 255, 0.22);
+        color: #ffffff;
+    }
+
+    .micro-label {
+        font-size: 0.72rem;
+        color: #64748b;
+        margin-bottom: 2px;
+        transition: color 0.18s ease;
+    }
+
+    .micro-value {
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: #1e293b;
+        transition: color 0.18s ease;
+    }
+
+    .customer-row-card:hover .micro-label {
+        color: rgba(255, 255, 255, 0.85);
+    }
+
+    .customer-row-card:hover .micro-value,
+    .customer-row-card:hover .cust-name {
+        color: #ffffff;
+    }
+
+    .status-dot-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.76rem;
+        font-weight: 600;
+        padding: 0.32rem 0.72rem;
+        border-radius: 999px;
+    }
+
+    .status-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+    }
+
+    .status-paid { color: #16a34a; background: #f0fdf4; }
+    .status-paid .status-dot { background: #16a34a; }
+
+    .status-partial { color: #d97706; background: #fffbeb; }
+    .status-partial .status-dot { background: #f59e0b; }
+
+    .status-unpaid { color: #dc2626; background: #fef2f2; }
+    .status-unpaid .status-dot { background: #ef4444; }
+
+    .pay-action-btn {
+        background: #e6f4fe;
+        color: #2b8fd9;
+        border: none;
+        border-radius: 10px;
+        padding: 0.42rem 0.8rem;
+        font-size: 0.78rem;
+        font-weight: 600;
+        transition: all 0.15s ease;
+    }
+
+    .customer-row-card:hover .pay-action-btn {
+        background: #ffffff;
+        color: #2b8fd9;
+    }
+
+    .record-row-card {
+        background: #f8fbfe;
+        border: 1px solid #e6eef5;
+        border-radius: 14px;
+        padding: 0.8rem 1rem;
+        margin-bottom: 0.6rem;
+    }
+
+    .records-scroll {
+        max-height: 66vh;
+        overflow-y: auto;
+        padding-right: 0.2rem;
+    }
+
+    @media (max-width: 768px) {
+        .customer-row-card {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="row g-3">
-    <div class="col-lg-6">
-        <div class="card p-3">
-            <h6 class="fw-bold mb-3">Customer Credit Balances</h6>
-            <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Customer</th>
-                            <th>Contact</th>
-                            <th>Balance</th>
-                            <th class="text-end">Record Payment</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for c in customers %}
-                        <tr>
-                            <td class="fw-semibold">{{ c.customer_name }}</td>
-                            <td class="small">{{ c.contact_number|default:"—" }}</td>
-                            <td class="fw-bold {% if c.current_credit_balance > 0 %}text-danger{% else %}text-success{% endif %}">
-                                ₱{{ c.current_credit_balance|floatformat:2 }}
-                            </td>
-                            <td class="text-end">
-                                {% if c.current_credit_balance > 0 %}
-                                <form method="post" action="{% url 'utang_pay' c.id %}" class="d-flex justify-content-end gap-1">
-                                    {% csrf_token %}
-                                    <input type="number" step="0.01" max="{{ c.current_credit_balance }}" name="payment_amount" class="form-control form-control-sm" style="width: 95px;" placeholder="Amount" required>
-                                    <button type="submit" class="btn btn-sm btn-success">Pay</button>
-                                </form>
-                                {% else %}
-                                <span class="badge bg-light text-muted">Settled</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr><td colspan="4" class="text-center text-muted py-4">No customers registered.</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+<div class="row g-4">
+    <!-- Left Panel: Customer Credit Accounts -->
+    <div class="col-lg-7">
+        <div class="utang-panel">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="utang-icon-box"><i class="bi bi-people"></i></div>
+                    <div>
+                        <h5 class="fw-bold mb-0">Customer Credit Balances</h5>
+                        <span class="text-muted small">{{ customers|length }} registered credit accounts</span>
+                    </div>
+                </div>
+                <input type="text" id="customerSearch" class="form-control form-control-sm" style="width: 210px;" placeholder="Search customer name...">
+            </div>
+
+            <div id="customerList">
+                {% for c in customers %}
+                <div class="customer-row-card" data-search="{{ c.customer_name|lower }} {{ c.contact_number|default:''|lower }}">
+                    <!-- Customer Name & Contact -->
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="cust-avatar">{{ c.customer_name|slice:":1"|upper }}</div>
+                        <div>
+                            <div class="fw-bold cust-name">{{ c.customer_name }}</div>
+                            <div class="micro-label">{{ c.contact_number|default:"No contact number" }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Balance -->
+                    <div>
+                        <div class="micro-label">Credit Balance</div>
+                        <div class="micro-value">₱{{ c.current_credit_balance|floatformat:2 }}</div>
+                    </div>
+
+                    <!-- Status Dot Pill -->
+                    <div>
+                        {% if c.current_credit_balance > 0 %}
+                            <span class="status-dot-pill status-partial"><span class="status-dot"></span>Balance Due</span>
+                        {% else %}
+                            <span class="status-dot-pill status-paid"><span class="status-dot"></span>Settled</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Pay Button -->
+                    <div class="text-end">
+                        {% if c.current_credit_balance > 0 %}
+                            <button type="button" class="pay-action-btn" data-bs-toggle="modal" data-bs-target="#payModal{{ c.id }}">
+                                Record Pay
+                            </button>
+                        {% else %}
+                            <span class="text-muted small"><i class="bi bi-check-circle-fill text-success"></i></span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if c.current_credit_balance > 0 %}
+                <!-- Record Payment Modal -->
+                <div class="modal fade" id="payModal{{ c.id }}" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <form method="post" action="{% url 'utang_pay' c.id %}" class="modal-content rounded-4 border-0">
+                            {% csrf_token %}
+                            <div class="modal-header border-0 pb-0">
+                                <h6 class="modal-title fw-bold">Record Utang Payment</h6>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="p-3 rounded-3 mb-3" style="background: #f4f8fb; border: 1px solid #e6eef5;">
+                                    <div class="small text-muted">Customer</div>
+                                    <div class="fw-bold">{{ c.customer_name }}</div>
+                                    <div class="small text-muted mt-2">Remaining Balance</div>
+                                    <div class="fw-bold fs-5" style="color: #4aa8eb;">₱{{ c.current_credit_balance|floatformat:2 }}</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label small fw-semibold">Payment Amount (₱)</label>
+                                    <input type="number" step="0.01" min="0.01" max="{{ c.current_credit_balance }}" name="payment_amount" class="form-control" placeholder="0.00" required>
+                                </div>
+                                <div>
+                                    <label class="form-label small fw-semibold">Notes</label>
+                                    <input type="text" name="notes" value="Credit Payment" class="form-control">
+                                </div>
+                            </div>
+                            <div class="modal-footer border-0 pt-0">
+                                <button type="submit" class="btn-sky px-4">Confirm Payment</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                {% endif %}
+                {% empty %}
+                <div class="text-center text-muted py-5 small">No customer credit records yet.</div>
+                {% endfor %}
             </div>
         </div>
     </div>
 
-    <div class="col-lg-6">
-        <div class="card p-3">
-            <h6 class="fw-bold mb-3">Credit & Payment History</h6>
-            <div class="table-responsive">
-                <table class="table table-sm align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Date</th>
-                            <th>Customer</th>
-                            <th>Credit (+)</th>
-                            <th>Paid (-)</th>
-                            <th>Remaining</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for r in records %}
-                        <tr>
-                            <td class="small">{{ r.record_date|date:"M d, H:i" }}</td>
-                            <td class="fw-semibold">{{ r.customer.customer_name }}</td>
-                            <td class="text-danger">{% if r.credit_amount > 0 %}+₱{{ r.credit_amount }}{% else %}—{% endif %}</td>
-                            <td class="text-success">{% if r.payment_amount > 0 %}-₱{{ r.payment_amount }}{% else %}—{% endif %}</td>
-                            <td class="fw-bold">₱{{ r.remaining_balance }}</td>
-                        </tr>
-                        {% empty %}
-                        <tr><td colspan="5" class="text-center text-muted py-4">No credit history yet.</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+    <!-- Right Panel: Recent Credit & Payment Activity -->
+    <div class="col-lg-5">
+        <div class="utang-panel">
+            <div class="d-flex align-items-center gap-2 mb-4">
+                <div class="utang-icon-box"><i class="bi bi-journal-text"></i></div>
+                <div>
+                    <h5 class="fw-bold mb-0">Credit & Payment History</h5>
+                    <span class="text-muted small">Latest 20 ledger entries</span>
+                </div>
+            </div>
+
+            <div class="records-scroll">
+                {% for r in records %}
+                <div class="record-row-card">
+                    <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
+                        <div class="fw-bold small">{{ r.customer.customer_name }}</div>
+                        {% if r.status == 'Paid' %}
+                            <span class="status-dot-pill status-paid"><span class="status-dot"></span>Paid</span>
+                        {% elif r.status == 'Partial' %}
+                            <span class="status-dot-pill status-partial"><span class="status-dot"></span>Partial</span>
+                        {% else %}
+                            <span class="status-dot-pill status-unpaid"><span class="status-dot"></span>Unpaid</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center small mb-1">
+                        {% if r.payment_amount > 0 %}
+                            <span class="fw-bold text-success">- ₱{{ r.payment_amount|floatformat:2 }} Paid</span>
+                        {% else %}
+                            <span class="fw-bold text-danger">+ ₱{{ r.credit_amount|floatformat:2 }} Credit</span>
+                        {% endif %}
+                        <span class="text-muted" style="font-size: 0.75rem;">Bal: ₱{{ r.remaining_balance|floatformat:2 }}</span>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center text-muted" style="font-size: 0.73rem;">
+                        <span>{{ r.notes|default:"POS Transaction" }}</span>
+                        <span>{{ r.record_date|date:"M d, Y h:i A" }}</span>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center text-muted py-5 small">No recent ledger transactions.</div>
+                {% endfor %}
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const customerSearch = document.getElementById('customerSearch');
+    const customerCards = document.querySelectorAll('.customer-row-card');
+
+    if (customerSearch) {
+        customerSearch.addEventListener('input', function() {
+            const term = this.value.trim().toLowerCase();
+            customerCards.forEach(card => {
+                const text = card.dataset.search || '';
+                card.style.display = (!term || text.includes(term)) ? '' : 'none';
+            });
+        });
+    }
+</script>
 {% endblock %}

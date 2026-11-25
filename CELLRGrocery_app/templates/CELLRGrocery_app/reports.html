@@ -2,79 +2,344 @@
 {% block title %}Sales Reports - CELL-R Grocery{% endblock %}
 {% block page_title %}Sales Reports & Analytics{% endblock %}
 
+{% block extra_css %}
+<style>
+    .stat-card {
+        background: #ffffff;
+        border: 1px solid #e6eef5;
+        border-radius: 20px;
+        padding: 1.35rem 1.5rem;
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        background: #e6f4fe;
+        color: #4aa8eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.35rem;
+    }
+
+    .stat-label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #64748b;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-value {
+        font-size: 1.55rem;
+        font-weight: 700;
+        color: #1e293b;
+        letter-spacing: -0.02em;
+    }
+
+    .report-panel {
+        background: #ffffff;
+        border: 1px solid #e6eef5;
+        border-radius: 20px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03);
+        height: 100%;
+    }
+
+    /* Built-in 7-Day Bar Chart */
+    .chart-wrapper {
+        display: flex;
+        gap: 0.75rem;
+        height: 290px;
+        padding-top: 1.25rem;
+    }
+
+    .chart-y-axis {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding-bottom: 28px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: #94a3b8;
+        text-align: right;
+        min-width: 52px;
+    }
+
+    .chart-plot-area {
+        flex: 1;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .chart-grid-lines {
+        position: absolute;
+        inset: 0 0 28px 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        pointer-events: none;
+    }
+
+    .chart-grid-line {
+        border-bottom: 1px dashed #e6eef5;
+        width: 100%;
+    }
+
+    .chart-bars-row {
+        position: relative;
+        z-index: 1;
+        flex: 1;
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 0.65rem;
+        align-items: end;
+        padding: 0 0.5rem;
+    }
+
+    .chart-col {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-end;
+    }
+
+    .chart-bar-track {
+        width: 100%;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-end;
+        padding-bottom: 6px;
+    }
+
+    .chart-bar-val {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: #4aa8eb;
+        margin-bottom: 4px;
+        white-space: nowrap;
+    }
+
+    .chart-bar-val.zero-val {
+        color: #cbd5e1;
+        font-weight: 500;
+    }
+
+    .chart-bar-fill {
+        width: 100%;
+        max-width: 40px;
+        min-height: 6px;
+        border-radius: 10px 10px 6px 6px;
+        background: linear-gradient(180deg, #5cb6f5 0%, #4aa8eb 100%);
+        box-shadow: 0 4px 12px rgba(74, 168, 235, 0.25);
+        transition: all 0.25s ease;
+    }
+
+    .chart-bar-fill.empty-bar {
+        background: #eaf1f7;
+        box-shadow: none;
+    }
+
+    .chart-col:hover .chart-bar-fill:not(.empty-bar) {
+        background: linear-gradient(180deg, #3b9ee6 0%, #2b8fd9 100%);
+        transform: translateY(-2px);
+    }
+
+    .chart-x-label {
+        height: 22px;
+        font-size: 0.74rem;
+        font-weight: 600;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        white-space: nowrap;
+    }
+
+    /* Top-Selling Products List */
+    .top-item-row {
+        background: #ffffff;
+        border: 1px solid #eaf0f6;
+        border-radius: 14px;
+        padding: 0.75rem 1rem;
+        margin-bottom: 0.6rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        transition: all 0.16s ease;
+    }
+
+    .top-item-row:hover {
+        background: #4aa8eb;
+        border-color: #4aa8eb;
+        color: #ffffff;
+    }
+
+    .top-item-row:hover .text-muted {
+        color: rgba(255, 255, 255, 0.85) !important;
+    }
+
+    .rank-badge {
+        width: 30px;
+        height: 30px;
+        border-radius: 10px;
+        background: #e6f4fe;
+        color: #4aa8eb;
+        font-size: 0.8rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .top-item-row:hover .rank-badge {
+        background: rgba(255, 255, 255, 0.22);
+        color: #ffffff;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <div class="row g-3 flex-grow-1 me-3">
-        <div class="col-md-6">
-            <div class="card p-3 border-start border-primary border-4">
-                <div class="small text-muted fw-semibold">DAILY SALES (TODAY)</div>
-                <h4 class="fw-bold mb-0 mt-1">₱{{ daily_sales|floatformat:2 }}</h4>
+<!-- Top Header & CSV Export -->
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <div>
+        <h5 class="fw-bold mb-0">Sales Performance Overview</h5>
+        <span class="text-muted small">Daily revenue tracking and top-selling grocery items</span>
+    </div>
+    <a href="{% url 'export_sales_csv' %}" class="btn-sky">
+        <i class="bi bi-download"></i> Export CSV Report
+    </a>
+</div>
+
+<!-- Revenue Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="stat-card">
+            <div>
+                <div class="stat-label">Today's Gross Sales</div>
+                <div class="stat-value">₱{{ daily_sales|floatformat:2 }}</div>
             </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card p-3 border-start border-success border-4">
-                <div class="small text-muted fw-semibold">WEEKLY SALES (LAST 7 DAYS)</div>
-                <h4 class="fw-bold mb-0 mt-1">₱{{ weekly_sales|floatformat:2 }}</h4>
+            <div class="stat-icon">
+                <i class="bi bi-cash-coin"></i>
             </div>
         </div>
     </div>
-    <div>
-        <a href="{% url 'export_sales_csv' %}" class="btn btn-success"><i class="bi bi-file-earmark-spreadsheet me-1"></i> Export CSV</a>
+    <div class="col-md-6">
+        <div class="stat-card">
+            <div>
+                <div class="stat-label">Last 7 Days Sales</div>
+                <div class="stat-value">₱{{ weekly_sales|floatformat:2 }}</div>
+            </div>
+            <div class="stat-icon">
+                <i class="bi bi-graph-up-arrow"></i>
+            </div>
+        </div>
     </div>
 </div>
 
-<div class="row g-3">
+<!-- 7-Day Sales Chart & Top-Selling Products -->
+<div class="row g-4">
     <div class="col-lg-7">
-        <div class="card p-3">
-            <h6 class="fw-bold mb-3">7-Day Sales Trend</h6>
-            <canvas id="salesTrendChart" height="140"></canvas>
+        <div class="report-panel">
+            <div class="d-flex align-items-center gap-2 mb-3">
+                <div class="stat-icon" style="width:36px;height:36px;font-size:1rem;">
+                    <i class="bi bi-bar-chart-line"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold mb-0">7-Day Sales Trend</h6>
+                    <span class="text-muted small">Daily completed transactions (₱)</span>
+                </div>
+            </div>
+
+            <div class="chart-wrapper">
+                <div class="chart-y-axis" id="chartYAxis"></div>
+                <div class="chart-plot-area">
+                    <div class="chart-grid-lines">
+                        <div class="chart-grid-line"></div>
+                        <div class="chart-grid-line"></div>
+                        <div class="chart-grid-line"></div>
+                        <div class="chart-grid-line"></div>
+                    </div>
+                    <div class="chart-bars-row" id="chartBarsRow"></div>
+                </div>
+            </div>
         </div>
     </div>
+
     <div class="col-lg-5">
-        <div class="card p-3">
-            <h6 class="fw-bold mb-3">Top-Selling Items</h6>
-            <table class="table table-sm align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>Product</th>
-                        <th class="text-center">Qty Sold</th>
-                        <th class="text-end">Revenue</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in top_items %}
-                    <tr>
-                        <td class="fw-semibold">{{ item.product__product_name }}</td>
-                        <td class="text-center">{{ item.total_qty }}</td>
-                        <td class="text-end fw-bold">₱{{ item.total_rev|floatformat:2 }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr><td colspan="3" class="text-center text-muted py-4">No sales data yet.</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="report-panel">
+            <div class="d-flex align-items-center gap-2 mb-3">
+                <div class="stat-icon" style="width:36px;height:36px;font-size:1rem;">
+                    <i class="bi bi-trophy"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold mb-0">Top-Selling Products</h6>
+                    <span class="text-muted small">Ranked by units sold</span>
+                </div>
+            </div>
+
+            {% for item in top_items %}
+            <div class="top-item-row">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="rank-badge">#{{ forloop.counter }}</div>
+                    <div>
+                        <div class="fw-bold small">{{ item.product__product_name }}</div>
+                        <div class="text-muted" style="font-size: 0.74rem;">{{ item.total_qty }} units sold</div>
+                    </div>
+                </div>
+                <div class="fw-bold small">₱{{ item.total_rev|floatformat:2 }}</div>
+            </div>
+            {% empty %}
+            <div class="text-center text-muted py-5 small">No sales recorded yet.</div>
+            {% endfor %}
         </div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script>
-const ctx = document.getElementById('salesTrendChart');
-new Chart(ctx, {
-    type: 'line',
-    data: {
-        labels: {{ chart_labels_json|safe }},
-        datasets: [{
-            label: 'Daily Sales (₱)',
-            data: {{ chart_values_json|safe }},
-            borderColor: '#0284c7',
-            backgroundColor: 'rgba(2, 132, 199, 0.15)',
-            fill: true,
-            tension: 0.3
-        }]
-    }
-});
+    (function() {
+        const labels = JSON.parse('{{ chart_labels_json|escapejs }}');
+        const values = JSON.parse('{{ chart_values_json|escapejs }}').map(Number);
+
+        const yAxisEl = document.getElementById('chartYAxis');
+        const barsRowEl = document.getElementById('chartBarsRow');
+
+        const rawMax = Math.max(...values, 0);
+        const scaleMax = rawMax > 0 ? Math.ceil((rawMax * 1.15) / 50) * 50 : 100;
+
+        // Render Y-axis ticks (4 steps)
+        const ticks = [scaleMax, Math.round(scaleMax * 0.66), Math.round(scaleMax * 0.33), 0];
+        yAxisEl.innerHTML = ticks.map(t => `<span>₱${t.toLocaleString()}</span>`).join('');
+
+        // Render 7 daily bars
+        barsRowEl.innerHTML = labels.map((label, idx) => {
+            const val = values[idx] || 0;
+            const pct = val > 0 ? Math.max(8, Math.round((val / scaleMax) * 100)) : 3;
+            const isZero = val <= 0;
+            const formattedVal = isZero ? '₱0' : '₱' + val.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+
+            return `
+                <div class="chart-col" title="${label}: ₱${val.toFixed(2)}">
+                    <div class="chart-bar-track">
+                        <div class="chart-bar-val ${isZero ? 'zero-val' : ''}">${formattedVal}</div>
+                        <div class="chart-bar-fill ${isZero ? 'empty-bar' : ''}" style="height: ${pct}%;"></div>
+                    </div>
+                    <div class="chart-x-label">${label}</div>
+                </div>
+            `;
+        }).join('');
+    })();
 </script>
 {% endblock %}

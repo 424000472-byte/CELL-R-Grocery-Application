@@ -1,174 +1,344 @@
 {% extends 'CELLRGrocery_app/base.html' %}
 {% block title %}Inventory - CELL-R Grocery{% endblock %}
-{% block page_title %}Product Inventory{% endblock %}
+{% block page_title %}Product List & Stock{% endblock %}
+
+{% block extra_css %}
+<style>
+    .inventory-panel {
+        background: #ffffff;
+        border: 1px solid #e6eef5;
+        border-radius: 20px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03);
+        position: relative;
+        padding-bottom: 3.5rem;
+    }
+
+    .product-row-card {
+        background: #ffffff;
+        border: 1px solid #eaf0f6;
+        border-radius: 16px;
+        padding: 0.9rem 1.2rem;
+        margin-bottom: 0.7rem;
+        display: grid;
+        grid-template-columns: 2.2fr 1.1fr 1fr 1fr 1.1fr;
+        align-items: center;
+        gap: 1rem;
+        transition: all 0.18s ease;
+    }
+
+    .product-row-card.admin-row {
+        grid-template-columns: 2.2fr 1.1fr 1fr 1fr 1.1fr auto;
+    }
+
+    .product-row-card:hover {
+        background: #4aa8eb;
+        border-color: #4aa8eb;
+        color: #ffffff;
+        transform: translateY(-1px);
+        box-shadow: 0 8px 20px rgba(74, 168, 235, 0.25);
+    }
+
+    .product-thumb {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: #f1f6fa;
+        color: #4aa8eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+        transition: all 0.18s ease;
+    }
+
+    .product-row-card:hover .product-thumb {
+        background: rgba(255, 255, 255, 0.22);
+        color: #ffffff;
+    }
+
+    .micro-label {
+        font-size: 0.72rem;
+        color: #64748b;
+        margin-bottom: 2px;
+        transition: color 0.18s ease;
+    }
+
+    .micro-value {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #1e293b;
+        transition: color 0.18s ease;
+    }
+
+    .product-row-card:hover .micro-label {
+        color: rgba(255, 255, 255, 0.85);
+    }
+
+    .product-row-card:hover .micro-value,
+    .product-row-card:hover .prod-title {
+        color: #ffffff;
+    }
+
+    .status-dot-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.78rem;
+        font-weight: 600;
+        padding: 0.35rem 0.75rem;
+        border-radius: 999px;
+        background: #f8fafc;
+    }
+
+    .status-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+    }
+
+    .status-in { color: #16a34a; background: #f0fdf4; }
+    .status-in .status-dot { background: #16a34a; }
+
+    .status-low { color: #d97706; background: #fffbeb; }
+    .status-low .status-dot { background: #f59e0b; }
+
+    .status-out { color: #dc2626; background: #fef2f2; }
+    .status-out .status-dot { background: #ef4444; }
+
+    .row-action-btn {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        color: #475569;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s ease;
+    }
+
+    .row-action-btn:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+    }
+
+    .floating-cta-wrap {
+        position: sticky;
+        bottom: 1rem;
+        display: flex;
+        justify-content: center;
+        margin-top: 1rem;
+    }
+
+    @media (max-width: 992px) {
+        .product-row-card,
+        .product-row-card.admin-row {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="card p-3 mb-3">
-    <form method="get" class="row g-2 align-items-center">
-        <div class="col-md-4">
-            <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Search product or barcode...">
+<div class="inventory-panel">
+    <!-- Header & Filters -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div class="d-flex align-items-center gap-2">
+            <div class="product-thumb" style="width:38px;height:38px;">
+                <i class="bi bi-box-seam"></i>
+            </div>
+            <div>
+                <h5 class="mb-0 fw-bold">Product List & Stock</h5>
+                <span class="text-muted small">{{ products|length }} items in catalog</span>
+            </div>
         </div>
-        <div class="col-md-3">
-            <select name="category" class="form-select">
+
+        <form method="get" class="d-flex flex-wrap gap-2 align-items-center">
+            <input type="text" name="q" value="{{ query }}" class="form-control form-control-sm" style="width: 200px;" placeholder="Filter name or barcode...">
+            <select name="category" class="form-select form-select-sm" style="width: 165px;">
                 <option value="">All Categories</option>
                 {% for cat in categories %}
                     <option value="{{ cat }}" {% if category_filter == cat %}selected{% endif %}>{{ cat }}</option>
                 {% endfor %}
             </select>
-        </div>
-        <div class="col-md-3">
-            <select name="status" class="form-select">
+            <select name="status" class="form-select form-select-sm" style="width: 145px;">
                 <option value="">All Statuses</option>
                 <option value="In Stock" {% if status_filter == 'In Stock' %}selected{% endif %}>In Stock</option>
                 <option value="Low Stock" {% if status_filter == 'Low Stock' %}selected{% endif %}>Low Stock</option>
                 <option value="Out of Stock" {% if status_filter == 'Out of Stock' %}selected{% endif %}>Out of Stock</option>
             </select>
-        </div>
-        <div class="col-md-2 d-flex gap-1">
-            <button type="submit" class="btn btn-primary w-100">Filter</button>
-            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addProductModal"><i class="bi bi-plus-lg"></i></button>
-        </div>
-    </form>
-</div>
+            <button type="submit" class="btn btn-primary btn-sm px-3">Filter</button>
+        </form>
+    </div>
 
-<div class="card p-3">
-    <div class="table-responsive">
-        <table class="table table-hover align-middle">
-            <thead class="table-light">
-                <tr>
-                    <th>Barcode</th>
-                    <th>Product Name</th>
-                    <th>Category</th>
-                    <th>Cost</th>
-                    <th>Selling Price</th>
-                    <th>Stock</th>
-                    <th>Status</th>
-                    <th class="text-end">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for p in products %}
-                <tr>
-                    <td class="small text-muted">{{ p.barcode_code|default:"—" }}</td>
-                    <td class="fw-semibold">{{ p.product_name }}</td>
-                    <td>{{ p.category }}</td>
-                    <td>₱{{ p.cost_price }}</td>
-                    <td class="fw-bold">₱{{ p.selling_price }}</td>
-                    <td>{{ p.stock_quantity }}</td>
-                    <td>
-                        {% if p.status == 'In Stock' %}
-                            <span class="badge bg-success">In Stock</span>
-                        {% elif p.status == 'Low Stock' %}
-                            <span class="badge bg-warning text-dark">Low Stock</span>
-                        {% else %}
-                            <span class="badge bg-danger">Out of Stock</span>
-                        {% endif %}
-                    </td>
-                    <td class="text-end">
-                        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editModal{{ p.id }}"><i class="bi bi-pencil"></i></button>
-                        <form method="post" action="{% url 'product_delete' p.id %}" class="d-inline" onsubmit="return confirm('Delete {{ p.product_name }}?');">
-                            {% csrf_token %}
-                            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
-                        </form>
-                    </td>
-                </tr>
+    <!-- Horizontal Row-Cards -->
+    {% for p in products %}
+    <div class="product-row-card {% if request.user.role == 'Administrator' or request.user.is_superuser %}admin-row{% endif %}">
+        <!-- Product Title & Category -->
+        <div class="d-flex align-items-center gap-3">
+            <div class="product-thumb">
+                <i class="bi bi-bag-check"></i>
+            </div>
+            <div>
+                <div class="fw-bold prod-title">{{ p.product_name }}</div>
+                <div class="micro-label">{{ p.category }} {% if p.barcode_code %}• {{ p.barcode_code }}{% endif %}</div>
+            </div>
+        </div>
 
-                <!-- Edit Modal -->
-                <div class="modal fade" id="editModal{{ p.id }}" tabindex="-1">
-                    <div class="modal-dialog">
-                        <form method="post" action="{% url 'product_edit' p.id %}" class="modal-content">
-                            {% csrf_token %}
-                            <div class="modal-header">
-                                <h6 class="modal-title">Edit Product</h6>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body row g-2">
-                                <div class="col-6">
-                                    <label class="form-label small">Barcode</label>
-                                    <input type="text" name="barcode_code" value="{{ p.barcode_code|default:'' }}" class="form-control form-control-sm">
-                                </div>
-                                <div class="col-6">
-                                    <label class="form-label small">Category</label>
-                                    <input type="text" name="category" value="{{ p.category }}" class="form-control form-control-sm" required>
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label small">Product Name</label>
-                                    <input type="text" name="product_name" value="{{ p.product_name }}" class="form-control form-control-sm" required>
-                                </div>
-                                <div class="col-6">
-                                    <label class="form-label small">Cost Price (₱)</label>
-                                    <input type="number" step="0.01" name="cost_price" value="{{ p.cost_price }}" class="form-control form-control-sm" required>
-                                </div>
-                                <div class="col-6">
-                                    <label class="form-label small">Selling Price (₱)</label>
-                                    <input type="number" step="0.01" name="selling_price" value="{{ p.selling_price }}" class="form-control form-control-sm" required>
-                                </div>
-                                <div class="col-6">
-                                    <label class="form-label small">Stock Quantity</label>
-                                    <input type="number" name="stock_quantity" value="{{ p.stock_quantity }}" class="form-control form-control-sm" required>
-                                </div>
-                                <div class="col-6">
-                                    <label class="form-label small">Low Stock Threshold</label>
-                                    <input type="number" name="low_stock_threshold" value="{{ p.low_stock_threshold }}" class="form-control form-control-sm" required>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
-                            </div>
-                        </form>
+        <!-- Stock Available -->
+        <div>
+            <div class="micro-label">Stock Available</div>
+            <div class="micro-value">{{ p.stock_quantity }}</div>
+        </div>
+
+        <!-- Cost Price -->
+        <div>
+            <div class="micro-label">Unit Cost</div>
+            <div class="micro-value">₱{{ p.cost_price }}</div>
+        </div>
+
+        <!-- Selling Price -->
+        <div>
+            <div class="micro-label">Selling Price</div>
+            <div class="micro-value">₱{{ p.selling_price }}</div>
+        </div>
+
+        <!-- Status Dot Pill -->
+        <div>
+            {% if p.status == 'In Stock' %}
+                <span class="status-dot-pill status-in"><span class="status-dot"></span>In Stock</span>
+            {% elif p.status == 'Low Stock' %}
+                <span class="status-dot-pill status-low"><span class="status-dot"></span>Low Stock</span>
+            {% else %}
+                <span class="status-dot-pill status-out"><span class="status-dot"></span>Out of Stock</span>
+            {% endif %}
+        </div>
+
+        <!-- Admin-Only Actions -->
+        {% if request.user.role == 'Administrator' or request.user.is_superuser %}
+        <div class="d-flex align-items-center gap-1 justify-content-end">
+            <button type="button" class="row-action-btn" data-bs-toggle="modal" data-bs-target="#editModal{{ p.id }}" title="Edit Product">
+                <i class="bi bi-pencil"></i>
+            </button>
+            <form method="post" action="{% url 'product_delete' p.id %}" class="d-inline" onsubmit="return confirm('Delete {{ p.product_name }}?');">
+                {% csrf_token %}
+                <button type="submit" class="row-action-btn text-danger" title="Delete Product">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if request.user.role == 'Administrator' or request.user.is_superuser %}
+    <!-- Edit Modal -->
+    <div class="modal fade" id="editModal{{ p.id }}" tabindex="-1">
+        <div class="modal-dialog">
+            <form method="post" action="{% url 'product_edit' p.id %}" class="modal-content rounded-4 border-0">
+                {% csrf_token %}
+                <div class="modal-header border-0 pb-0">
+                    <h6 class="modal-title fw-bold">Edit Product</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body row g-2">
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold">Barcode</label>
+                        <input type="text" name="barcode_code" value="{{ p.barcode_code|default:'' }}" class="form-control form-control-sm">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold">Category</label>
+                        <input type="text" name="category" value="{{ p.category }}" class="form-control form-control-sm" required>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold">Product Name</label>
+                        <input type="text" name="product_name" value="{{ p.product_name }}" class="form-control form-control-sm" required>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold">Cost Price (₱)</label>
+                        <input type="number" step="0.01" name="cost_price" value="{{ p.cost_price }}" class="form-control form-control-sm" required>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold">Selling Price (₱)</label>
+                        <input type="number" step="0.01" name="selling_price" value="{{ p.selling_price }}" class="form-control form-control-sm" required>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold">Stock Quantity</label>
+                        <input type="number" name="stock_quantity" value="{{ p.stock_quantity }}" class="form-control form-control-sm" required>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold">Low Stock Threshold</label>
+                        <input type="number" name="low_stock_threshold" value="{{ p.low_stock_threshold }}" class="form-control form-control-sm" required>
                     </div>
                 </div>
-                {% empty %}
-                <tr><td colspan="8" class="text-center text-muted py-4">No products found.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="submit" class="btn btn-primary btn-sm px-4">Save Changes</button>
+                </div>
+            </form>
+        </div>
     </div>
+    {% endif %}
+    {% empty %}
+    <div class="text-center text-muted py-5">No products found matching your filter.</div>
+    {% endfor %}
+
+    {% if request.user.role == 'Administrator' or request.user.is_superuser %}
+    <!-- Floating Sky-Blue CTA Pill -->
+    <div class="floating-cta-wrap">
+        <button type="button" class="btn-sky px-4 py-2" data-bs-toggle="modal" data-bs-target="#addProductModal">
+            <i class="bi bi-plus-circle"></i> Add New Product
+        </button>
+    </div>
+    {% endif %}
 </div>
 
+{% if request.user.role == 'Administrator' or request.user.is_superuser %}
 <!-- Add Product Modal -->
 <div class="modal fade" id="addProductModal" tabindex="-1">
     <div class="modal-dialog">
-        <form method="post" action="{% url 'product_add' %}" class="modal-content">
+        <form method="post" action="{% url 'product_add' %}" class="modal-content rounded-4 border-0">
             {% csrf_token %}
-            <div class="modal-header">
-                <h6 class="modal-title">Add New Product</h6>
+            <div class="modal-header border-0 pb-0">
+                <h6 class="modal-title fw-bold">Add New Product</h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body row g-2">
                 <div class="col-6">
-                    <label class="form-label small">Barcode</label>
+                    <label class="form-label small fw-semibold">Barcode</label>
                     <input type="text" name="barcode_code" class="form-control form-control-sm">
                 </div>
                 <div class="col-6">
-                    <label class="form-label small">Category</label>
+                    <label class="form-label small fw-semibold">Category</label>
                     <input type="text" name="category" class="form-control form-control-sm" placeholder="e.g. Canned Goods" required>
                 </div>
                 <div class="col-12">
-                    <label class="form-label small">Product Name</label>
+                    <label class="form-label small fw-semibold">Product Name</label>
                     <input type="text" name="product_name" class="form-control form-control-sm" required>
                 </div>
                 <div class="col-6">
-                    <label class="form-label small">Cost Price (₱)</label>
+                    <label class="form-label small fw-semibold">Cost Price (₱)</label>
                     <input type="number" step="0.01" name="cost_price" class="form-control form-control-sm" required>
                 </div>
                 <div class="col-6">
-                    <label class="form-label small">Selling Price (₱)</label>
+                    <label class="form-label small fw-semibold">Selling Price (₱)</label>
                     <input type="number" step="0.01" name="selling_price" class="form-control form-control-sm" required>
                 </div>
                 <div class="col-6">
-                    <label class="form-label small">Initial Stock</label>
+                    <label class="form-label small fw-semibold">Initial Stock</label>
                     <input type="number" name="stock_quantity" value="0" class="form-control form-control-sm" required>
                 </div>
                 <div class="col-6">
-                    <label class="form-label small">Low Stock Threshold</label>
+                    <label class="form-label small fw-semibold">Low Stock Threshold</label>
                     <input type="number" name="low_stock_threshold" value="10" class="form-control form-control-sm" required>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="submit" class="btn btn-success btn-sm">Add Product</button>
+            <div class="modal-footer border-0 pt-0">
+                <button type="submit" class="btn-sky px-4">Save Product</button>
             </div>
         </form>
     </div>
 </div>
+{% endif %}
 {% endblock %}

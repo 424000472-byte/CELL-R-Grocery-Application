@@ -4,6 +4,7 @@ import os
 import shutil
 from datetime import timedelta
 from decimal import Decimal
+from functools import wraps
 
 from django.conf import settings
 from django.contrib import messages
@@ -19,6 +20,18 @@ from .models import (
     User, StoreSettings, Supplier, Product, Customer,
     StockInDelivery, StockInDetail, SaleTransaction, SaleDetail, CreditRecord
 )
+
+
+def admin_required(redirect_to='dashboard'):
+    def decorator(view_func):
+        @wraps(view_func)
+        def _wrapped_view(request, *args, **kwargs):
+            if request.user.role != 'Administrator' and not request.user.is_superuser:
+                messages.error(request, "Access denied: Administrator privileges required.")
+                return redirect(redirect_to)
+            return view_func(request, *args, **kwargs)
+        return _wrapped_view
+    return decorator
 
 
 def login_view(request):
@@ -207,6 +220,7 @@ def inventory_list_view(request):
 
 
 @login_required
+@admin_required('inventory_list')
 def product_add(request):
     if request.method == 'POST':
         Product.objects.create(
@@ -224,6 +238,7 @@ def product_add(request):
 
 
 @login_required
+@admin_required('inventory_list')
 def product_edit(request, pk):
     product = get_object_or_404(Product, pk=pk)
     if request.method == 'POST':
@@ -241,6 +256,7 @@ def product_edit(request, pk):
 
 
 @login_required
+@admin_required('inventory_list')
 def product_delete(request, pk):
     product = get_object_or_404(Product, pk=pk)
     if request.method == 'POST':
@@ -251,6 +267,7 @@ def product_delete(request, pk):
 
 
 @login_required
+@admin_required('dashboard')
 def purchase_orders_view(request):
     if request.method == 'POST':
         supplier_id = request.POST.get('supplier_id')
@@ -300,6 +317,7 @@ def purchase_orders_view(request):
 
 
 @login_required
+@admin_required('dashboard')
 def supplier_add(request):
     if request.method == 'POST':
         Supplier.objects.create(
@@ -346,6 +364,7 @@ def utang_pay(request, customer_id):
 
 
 @login_required
+@admin_required('dashboard')
 def reports_view(request):
     today = timezone.localdate()
     week_ago = today - timedelta(days=6)
@@ -378,6 +397,7 @@ def reports_view(request):
 
 
 @login_required
+@admin_required('dashboard')
 def export_sales_csv(request):
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="cellr_grocery_sales_report.csv"'
@@ -398,6 +418,7 @@ def export_sales_csv(request):
 
 
 @login_required
+@admin_required('dashboard')
 def settings_view(request):
     store_settings, _ = StoreSettings.objects.get_or_create(id=1)
 
@@ -411,26 +432,23 @@ def settings_view(request):
             store_settings.save()
             messages.success(request, "Store information updated.")
         elif action == 'create_user':
-            if request.user.role != 'Administrator' and not request.user.is_superuser:
-                messages.error(request, "Only Administrators can create new accounts.")
-            else:
-                uname = request.POST.get('username')
-                pwd = request.POST.get('password')
-                fname = request.POST.get('first_name', '')
-                lname = request.POST.get('last_name', '')
-                role = request.POST.get('role', 'Cashier')
-                if uname and pwd:
-                    if User.objects.filter(username=uname).exists():
-                        messages.error(request, "Username already exists.")
-                    else:
-                        new_u = User.objects.create_user(
-                            username=uname, password=pwd,
-                            first_name=fname, last_name=lname, role=role
-                        )
-                        if role == 'Administrator':
-                            new_u.is_staff = True
-                            new_u.save()
-                        messages.success(request, f"User {uname} ({role}) created.")
+            uname = request.POST.get('username')
+            pwd = request.POST.get('password')
+            fname = request.POST.get('first_name', '')
+            lname = request.POST.get('last_name', '')
+            role = request.POST.get('role', 'Cashier')
+            if uname and pwd:
+                if User.objects.filter(username=uname).exists():
+                    messages.error(request, "Username already exists.")
+                else:
+                    new_u = User.objects.create_user(
+                        username=uname, password=pwd,
+                        first_name=fname, last_name=lname, role=role
+                    )
+                    if role == 'Administrator':
+                        new_u.is_staff = True
+                        new_u.save()
+                    messages.success(request, f"User {uname} ({role}) created.")
         return redirect('settings')
 
     users = User.objects.all().order_by('username')
@@ -441,6 +459,7 @@ def settings_view(request):
 
 
 @login_required
+@admin_required('dashboard')
 def backup_database(request):
     db_path = settings.DATABASES['default']['NAME']
     if os.path.exists(db_path):

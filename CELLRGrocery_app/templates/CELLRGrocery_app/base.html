@@ -4,107 +4,502 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}CELL-R Grocery POS & Inventory{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <style>
-        body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        :root {
+            --bg-canvas: #eef4f8;
+            --surface-white: #ffffff;
+            --surface-soft: #f4f8fb;
+            --brand-blue: #4aa8eb;
+            --brand-blue-dark: #2b8fd9;
+            --brand-blue-soft: #e6f4fe;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --border-light: #e6eef5;
+        }
+
+        body {
+            background-color: var(--bg-canvas);
+            color: var(--text-dark);
+            font-family: 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Crisp White Sidebar */
         .sidebar {
             min-height: 100vh;
-            background: #1e293b;
-            color: #f8fafc;
-            width: 245px;
+            background: var(--surface-white);
+            width: 255px;
             position: fixed;
-            top: 0; left: 0;
-            padding-top: 1.25rem;
+            top: 0;
+            left: 0;
+            padding: 1.25rem 1rem;
+            border-right: 1px solid var(--border-light);
             z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            transition: width 0.2s ease, padding 0.2s ease;
         }
-        .sidebar .brand {
-            font-size: 1.25rem;
-            font-weight: 700;
-            padding: 0 1.25rem 1.25rem;
-            border-bottom: 1px solid #334155;
-            color: #38bdf8;
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.25rem 0.5rem 1rem;
         }
-        .sidebar .nav-link {
-            color: #cbd5e1;
-            padding: 0.7rem 1.25rem;
-            margin: 0.15rem 0.6rem;
-            border-radius: 0.5rem;
+
+        .brand-wrap {
             display: flex;
             align-items: center;
             gap: 0.65rem;
-            font-weight: 500;
+            text-decoration: none;
         }
-        .sidebar .nav-link:hover, .sidebar .nav-link.active {
-            background: #0284c7;
-            color: #ffffff;
-        }
-        .main-wrapper {
-            margin-left: 245px;
-            padding: 1.5rem 2rem;
-        }
-        .topbar {
-            background: #ffffff;
-            padding: 0.85rem 1.5rem;
-            border-radius: 0.65rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-            margin-bottom: 1.5rem;
+
+        .brand-logo {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: var(--brand-blue-soft);
+            color: var(--brand-blue);
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            flex-shrink: 0;
         }
-        .card { border: none; border-radius: 0.65rem; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
-        @media (max-width: 768px) {
-            .sidebar { position: relative; width: 100%; min-height: auto; }
-            .main-wrapper { margin-left: 0; padding: 1rem; }
+
+        .brand-name {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--brand-blue);
+            letter-spacing: -0.02em;
+            white-space: nowrap;
+        }
+
+        .sidebar-toggle-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--text-muted);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .sidebar-toggle-btn:hover {
+            background: var(--surface-soft);
+            border-color: var(--border-light);
+            color: var(--brand-blue);
+        }
+
+        /* Interactive Store Location Pill */
+        .store-pill {
+            background: var(--surface-soft);
+            border: 1px solid var(--border-light);
+            border-radius: 14px;
+            padding: 0.75rem 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.16s ease;
+        }
+
+        .store-pill:hover,
+        .store-pill[aria-expanded="true"] {
+            background: #ffffff;
+            border-color: var(--brand-blue);
+            box-shadow: 0 4px 14px rgba(74, 168, 235, 0.14);
+        }
+
+        .store-pill-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            line-height: 1.2;
+        }
+
+        .store-pill-addr {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .store-dropdown-menu {
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+            padding: 0.5rem;
+        }
+
+        .store-dropdown-menu .dropdown-item {
+            border-radius: 10px;
+            font-size: 0.83rem;
+            font-weight: 500;
+            padding: 0.5rem 0.75rem;
+        }
+
+        .store-dropdown-menu .dropdown-item:hover {
+            background-color: var(--surface-soft);
+            color: var(--brand-blue-dark);
+        }
+
+        /* Sidebar Navigation */
+        .sidebar .nav-link {
+            color: var(--text-muted);
+            padding: 0.72rem 1rem;
+            margin-bottom: 0.25rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            white-space: nowrap;
+            transition: all 0.18s ease;
+        }
+
+        .sidebar .nav-link i {
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .sidebar .nav-link:hover {
+            background: var(--surface-soft);
+            color: var(--brand-blue);
+        }
+
+        .sidebar .nav-link.active {
+            background: var(--brand-blue);
+            color: #ffffff;
+            font-weight: 600;
+            box-shadow: 0 6px 16px rgba(74, 168, 235, 0.32);
+        }
+
+        /* Main Area & Top Bar */
+        .main-wrapper {
+            margin-left: 255px;
+            padding: 1.25rem 1.75rem 2.5rem;
+            transition: margin-left 0.2s ease;
+        }
+
+        /* Collapsed Sidebar Mode (Desktop) */
+        @media (min-width: 993px) {
+            body.sidebar-collapsed .sidebar {
+                width: 82px;
+                padding: 1.25rem 0.65rem;
+            }
+
+            body.sidebar-collapsed .sidebar-header {
+                justify-content: center;
+                padding-left: 0;
+                padding-right: 0;
+            }
+
+            body.sidebar-collapsed .brand-wrap,
+            body.sidebar-collapsed .store-dropdown-wrap,
+            body.sidebar-collapsed .nav-label {
+                display: none;
+            }
+
+            body.sidebar-collapsed .sidebar .nav-link {
+                justify-content: center;
+                padding: 0.75rem;
+            }
+
+            body.sidebar-collapsed .main-wrapper {
+                margin-left: 82px;
+            }
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .top-search-form {
+            flex: 1;
+            min-width: 240px;
+            max-width: 460px;
+            position: relative;
+        }
+
+        .top-search-form i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        .top-search-input {
+            width: 100%;
+            background: var(--surface-white);
+            border: 1px solid var(--border-light);
+            border-radius: 14px;
+            padding: 0.68rem 1rem 0.68rem 2.65rem;
+            font-size: 0.88rem;
+            color: var(--text-dark);
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.02);
+        }
+
+        .top-search-input:focus {
+            outline: none;
+            border-color: var(--brand-blue);
+            box-shadow: 0 0 0 3px rgba(74, 168, 235, 0.16);
+        }
+
+        .btn-sky {
+            background: var(--brand-blue);
+            color: #ffffff;
+            border: none;
+            border-radius: 14px;
+            padding: 0.65rem 1.15rem;
+            font-size: 0.86rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 12px rgba(74, 168, 235, 0.28);
+            transition: all 0.15s ease;
+            text-decoration: none;
+        }
+
+        .btn-sky:hover {
+            background: var(--brand-blue-dark);
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+
+        .btn-pill-white {
+            background: var(--surface-white);
+            color: var(--text-dark);
+            border: 1px solid var(--border-light);
+            border-radius: 14px;
+            padding: 0.65rem 1.1rem;
+            font-size: 0.86rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.02);
+            transition: all 0.15s ease;
+            text-decoration: none;
+        }
+
+        .btn-pill-white:hover {
+            border-color: var(--brand-blue);
+            color: var(--brand-blue);
+        }
+
+        .user-chip {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            background: var(--surface-white);
+            border: 1px solid var(--border-light);
+            border-radius: 14px;
+            padding: 0.42rem 0.85rem;
+        }
+
+        .user-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            background: var(--brand-blue-soft);
+            color: var(--brand-blue);
+            font-weight: 700;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Shared Panel & Card Styles */
+        .panel-card, .card {
+            background: var(--surface-white);
+            border: 1px solid var(--border-light);
+            border-radius: 18px;
+            box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03);
+        }
+
+        .btn-primary {
+            background-color: var(--brand-blue);
+            border-color: var(--brand-blue);
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--brand-blue-dark);
+            border-color: var(--brand-blue-dark);
+        }
+
+        .form-control, .form-select {
+            border-radius: 12px;
+            border-color: var(--border-light);
+            background-color: var(--surface-soft);
+            font-size: 0.88rem;
+        }
+
+        .form-control:focus, .form-select:focus {
+            background-color: #ffffff;
+            border-color: var(--brand-blue);
+            box-shadow: 0 0 0 3px rgba(74, 168, 235, 0.16);
+        }
+
+        @media (max-width: 992px) {
+            .sidebar {
+                position: relative;
+                width: 100%;
+                min-height: auto;
+                border-right: none;
+                border-bottom: 1px solid var(--border-light);
+            }
+            .sidebar.mobile-closed .store-dropdown-wrap,
+            .sidebar.mobile-closed .nav {
+                display: none;
+            }
+            .main-wrapper {
+                margin-left: 0;
+                padding: 1rem;
+            }
         }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
 
-<div class="sidebar">
-    <div class="brand">
-        <i class="bi bi-shop-window me-2"></i>CELL-R Grocery
+<div class="sidebar" id="appSidebar">
+    <div class="sidebar-header">
+        <a href="{% url 'dashboard' %}" class="brand-wrap">
+            <div class="brand-logo">
+                <i class="bi bi-cart3"></i>
+            </div>
+            <span class="brand-name">CELL-R</span>
+        </a>
+        <button type="button" class="sidebar-toggle-btn" id="sidebarToggle" title="Toggle Menu">
+            <i class="bi bi-list fs-5"></i>
+        </button>
     </div>
-    <nav class="nav flex-column mt-3">
-        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
-            <i class="bi bi-speedometer2"></i> Dashboard
+
+    <!-- Clickable Store Branch Dropdown -->
+    <div class="dropdown mb-3 store-dropdown-wrap">
+        <button type="button" class="store-pill w-100 text-start" data-bs-toggle="dropdown" aria-expanded="false">
+            <div>
+                <div class="store-pill-title">CELL-R Grocery Store</div>
+                <div class="store-pill-addr">Quiapo, Manila, Philippines</div>
+            </div>
+            <i class="bi bi-chevron-down text-muted small"></i>
+        </button>
+        <ul class="dropdown-menu w-100 store-dropdown-menu">
+            <li class="px-2 py-1">
+                <div class="d-flex align-items-center gap-2 small fw-semibold text-success">
+                    <span style="width:7px;height:7px;border-radius:50%;background:#16a34a;display:inline-block;"></span>
+                    Main Branch • POS Online
+                </div>
+                <div class="text-muted" style="font-size: 0.72rem;">Signed in as {{ request.user.role }}</div>
+            </li>
+            <li><hr class="dropdown-divider my-1"></li>
+            {% if request.user.role == 'Administrator' or request.user.is_superuser %}
+            <li>
+                <a class="dropdown-item" href="{% url 'settings' %}">
+                    <i class="bi bi-shop me-2 text-primary"></i>Edit Store Details
+                </a>
+            </li>
+            {% endif %}
+            <li>
+                <a class="dropdown-item" href="{% url 'pos' %}">
+                    <i class="bi bi-receipt me-2 text-primary"></i>Open POS Counter
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item text-danger" href="{% url 'logout' %}">
+                    <i class="bi bi-box-arrow-right me-2"></i>Logout
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <nav class="nav flex-column">
+        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}" title="Dashboard">
+            <i class="bi bi-grid"></i> <span class="nav-label">Dashboard</span>
         </a>
-        <a class="nav-link {% if request.resolver_match.url_name == 'pos' %}active{% endif %}" href="{% url 'pos' %}">
-            <i class="bi bi-cart-check"></i> Sales / POS
+        <a class="nav-link {% if request.resolver_match.url_name == 'pos' %}active{% endif %}" href="{% url 'pos' %}" title="POS / Create Bill">
+            <i class="bi bi-receipt"></i> <span class="nav-label">POS / Create Bill</span>
         </a>
-        <a class="nav-link {% if request.resolver_match.url_name == 'inventory_list' %}active{% endif %}" href="{% url 'inventory_list' %}">
-            <i class="bi bi-box-seam"></i> Inventory
+        <a class="nav-link {% if request.resolver_match.url_name == 'inventory_list' %}active{% endif %}" href="{% url 'inventory_list' %}" title="Inventory">
+            <i class="bi bi-box-seam"></i> <span class="nav-label">Inventory</span>
         </a>
-        <a class="nav-link {% if request.resolver_match.url_name == 'purchase_orders' %}active{% endif %}" href="{% url 'purchase_orders' %}">
-            <i class="bi bi-truck"></i> Stock-In / Orders
+        <a class="nav-link {% if request.resolver_match.url_name == 'utang_list' %}active{% endif %}" href="{% url 'utang_list' %}" title="Utang / Customers">
+            <i class="bi bi-people"></i> <span class="nav-label">Utang / Customers</span>
         </a>
-        <a class="nav-link {% if request.resolver_match.url_name == 'utang_list' %}active{% endif %}" href="{% url 'utang_list' %}">
-            <i class="bi bi-journal-text"></i> Utang / Credit
+
+        {% if request.user.role == 'Administrator' or request.user.is_superuser %}
+        <a class="nav-link {% if request.resolver_match.url_name == 'purchase_orders' %}active{% endif %}" href="{% url 'purchase_orders' %}" title="Stock-In & Orders">
+            <i class="bi bi-truck"></i> <span class="nav-label">Stock-In & Orders</span>
         </a>
-        <a class="nav-link {% if request.resolver_match.url_name == 'reports' %}active{% endif %}" href="{% url 'reports' %}">
-            <i class="bi bi-bar-chart-line"></i> Sales Reports
+        <a class="nav-link {% if request.resolver_match.url_name == 'reports' %}active{% endif %}" href="{% url 'reports' %}" title="Sales Reports">
+            <i class="bi bi-bar-chart-line"></i> <span class="nav-label">Sales Reports</span>
         </a>
-        <a class="nav-link {% if request.resolver_match.url_name == 'settings' %}active{% endif %}" href="{% url 'settings' %}">
-            <i class="bi bi-gear"></i> Settings
+        <a class="nav-link {% if request.resolver_match.url_name == 'settings' %}active{% endif %}" href="{% url 'settings' %}" title="Settings">
+            <i class="bi bi-gear"></i> <span class="nav-label">Settings</span>
         </a>
+        {% endif %}
     </nav>
 </div>
 
 <div class="main-wrapper">
     <div class="topbar">
-        <h5 class="mb-0 fw-semibold text-dark">{% block page_title %}Overview{% endblock %}</h5>
-        <div class="d-flex align-items-center gap-3">
-            <span class="badge bg-info text-dark">{{ request.user.role }}</span>
-            <span class="text-muted small"><i class="bi bi-person-circle me-1"></i>{{ request.user.username }}</span>
-            <a href="{% url 'logout' %}" class="btn btn-outline-danger btn-sm">Logout</a>
+        <form method="get" action="{% url 'inventory_list' %}" class="top-search-form">
+            <i class="bi bi-search"></i>
+            <input type="text" name="q" value="{{ query|default:'' }}" class="top-search-input" placeholder="Search here for product, barcode...">
+        </form>
+
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <a href="{% url 'pos' %}" class="btn-sky">
+                <i class="bi bi-upc-scan"></i> POS Checkout
+            </a>
+            {% if request.user.role == 'Administrator' or request.user.is_superuser %}
+            <a href="{% url 'purchase_orders' %}" class="btn-pill-white">
+                <i class="bi bi-box-arrow-in-down"></i> Stock-In
+            </a>
+            {% else %}
+            <a href="{% url 'utang_list' %}" class="btn-pill-white">
+                <i class="bi bi-journal-check"></i> Utang Ledger
+            </a>
+            {% endif %}
+
+            <div class="user-chip">
+                <div class="user-avatar">
+                    {{ request.user.username|slice:":1"|upper }}
+                </div>
+                <div class="lh-1">
+                    <div class="fw-bold small">{{ request.user.first_name|default:request.user.username }}</div>
+                    <div class="text-muted" style="font-size: 0.72rem;">{{ request.user.role }}</div>
+                </div>
+                <a href="{% url 'logout' %}" class="btn btn-sm btn-light text-danger ms-1 rounded-3" title="Logout">
+                    <i class="bi bi-box-arrow-right"></i>
+                </a>
+            </div>
         </div>
     </div>
 
     {% if messages %}
         {% for message in messages %}
-            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags|default:'info' }}{% endif %} alert-dismissible fade show border-0 rounded-4 shadow-sm" role="alert">
                 {{ message }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
@@ -115,6 +510,25 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const appSidebar = document.getElementById('appSidebar');
+
+    if (localStorage.getItem('cellr_sidebar_collapsed') === 'true' && window.innerWidth > 992) {
+        document.body.classList.add('sidebar-collapsed');
+    }
+
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', function() {
+            if (window.innerWidth > 992) {
+                document.body.classList.toggle('sidebar-collapsed');
+                localStorage.setItem('cellr_sidebar_collapsed', document.body.classList.contains('sidebar-collapsed'));
+            } else {
+                appSidebar.classList.toggle('mobile-closed');
+            }
+        });
+    }
+</script>
 {% block extra_js %}{% endblock %}
 </body>
 </html>

@@ -1,17 +1,194 @@
 {% extends 'CELLRGrocery_app/base.html' %}
 {% block title %}POS Terminal - CELL-R Grocery{% endblock %}
-{% block page_title %}Point of Sale (POS){% endblock %}
+{% block page_title %}POS / Create Bill{% endblock %}
+
+{% block extra_css %}
+<style>
+    .pos-panel {
+        background: #ffffff;
+        border: 1px solid #e6eef5;
+        border-radius: 20px;
+        padding: 1.35rem;
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03);
+    }
+
+    .pos-icon-box {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        background: #e6f4fe;
+        color: #4aa8eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.15rem;
+        flex-shrink: 0;
+    }
+
+    .product-grid-scroll {
+        max-height: 64vh;
+        overflow-y: auto;
+        padding-right: 0.25rem;
+    }
+
+    .pos-product-card {
+        background: #ffffff;
+        border: 1px solid #eaf0f6;
+        border-radius: 16px;
+        padding: 0.9rem;
+        height: 100%;
+        cursor: pointer;
+        transition: all 0.16s ease;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        user-select: none;
+    }
+
+    .pos-product-card:hover {
+        background: #4aa8eb;
+        border-color: #4aa8eb;
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 18px rgba(74, 168, 235, 0.26);
+    }
+
+    .pos-product-card .prod-cat {
+        font-size: 0.72rem;
+        color: #64748b;
+        transition: color 0.16s ease;
+    }
+
+    .pos-product-card .prod-price {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #4aa8eb;
+        transition: color 0.16s ease;
+    }
+
+    .pos-product-card .stock-pill {
+        font-size: 0.7rem;
+        font-weight: 600;
+        padding: 0.2rem 0.55rem;
+        border-radius: 999px;
+        background: #f1f6fa;
+        color: #475569;
+        transition: all 0.16s ease;
+    }
+
+    .pos-product-card:hover .prod-cat,
+    .pos-product-card:hover .prod-price {
+        color: #ffffff;
+    }
+
+    .pos-product-card:hover .stock-pill {
+        background: rgba(255, 255, 255, 0.22);
+        color: #ffffff;
+    }
+
+    .cart-scroll {
+        max-height: 32vh;
+        overflow-y: auto;
+    }
+
+    .cart-row {
+        background: #f8fbfe;
+        border: 1px solid #e6eef5;
+        border-radius: 14px;
+        padding: 0.65rem 0.85rem;
+        margin-bottom: 0.55rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+    }
+
+    .qty-btn {
+        width: 26px;
+        height: 26px;
+        border-radius: 8px;
+        border: 1px solid #dbe6f0;
+        background: #ffffff;
+        color: #1e293b;
+        font-weight: 700;
+        font-size: 0.85rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+    }
+
+    .qty-btn:hover {
+        background: #4aa8eb;
+        border-color: #4aa8eb;
+        color: #ffffff;
+    }
+
+    .pay-toggle-btn {
+        flex: 1;
+        border: 1px solid #e2ecf4;
+        background: #f4f8fb;
+        color: #475569;
+        border-radius: 12px;
+        padding: 0.55rem;
+        font-weight: 600;
+        font-size: 0.86rem;
+        transition: all 0.15s ease;
+    }
+
+    .pay-toggle-btn.active {
+        background: #4aa8eb;
+        border-color: #4aa8eb;
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(74, 168, 235, 0.25);
+    }
+
+    .quick-cash-btn {
+        font-size: 0.74rem;
+        font-weight: 600;
+        padding: 0.25rem 0.55rem;
+        border-radius: 8px;
+        border: 1px solid #dbe6f0;
+        background: #f8fbfe;
+        color: #334155;
+    }
+
+    .quick-cash-btn:hover {
+        background: #e6f4fe;
+        border-color: #4aa8eb;
+        color: #2b8fd9;
+    }
+
+    .summary-box {
+        background: #f4f8fb;
+        border: 1px solid #e6eef5;
+        border-radius: 16px;
+        padding: 0.9rem 1rem;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="row g-3">
-    <!-- Left: Product Search & Grid -->
+    <!-- Left Column: Product Catalog -->
     <div class="col-lg-7">
-        <div class="card p-3">
-            <div class="row g-2 mb-3">
-                <div class="col-md-7">
-                    <input type="text" id="posSearch" class="form-control" placeholder="Search product name or scan barcode...">
+        <div class="pos-panel h-100">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="pos-icon-box"><i class="bi bi-grid"></i></div>
+                    <div>
+                        <h6 class="fw-bold mb-0">Select Products</h6>
+                        <span class="text-muted small">Click item or scan barcode to add</span>
+                    </div>
                 </div>
-                <div class="col-md-5">
+            </div>
+
+            <!-- Search & Category Filter -->
+            <div class="row g-2 mb-3">
+                <div class="col-sm-7">
+                    <input type="text" id="posSearch" class="form-control" placeholder="Search product name or scan barcode..." autofocus>
+                </div>
+                <div class="col-sm-5">
                     <select id="posCategory" class="form-select">
                         <option value="">All Categories</option>
                         {% for cat in categories %}
@@ -21,19 +198,28 @@
                 </div>
             </div>
 
-            <div class="row g-2" id="productGrid" style="max-height: 65vh; overflow-y: auto;">
+            <!-- Product Grid -->
+            <div class="row g-2 product-grid-scroll" id="productGrid">
                 {% for p in products %}
                 <div class="col-sm-6 col-md-4 product-item"
+                     data-id="{{ p.id }}"
+                     data-title="{{ p.product_name }}"
+                     data-price="{{ p.selling_price }}"
+                     data-stock="{{ p.stock_quantity }}"
                      data-name="{{ p.product_name|lower }}"
                      data-barcode="{{ p.barcode_code|default:''|lower }}"
                      data-category="{{ p.category }}">
-                    <div class="card h-100 border p-2 shadow-none" style="cursor: pointer;"
-                         onclick="addToCart({{ p.id }}, '{{ p.product_name|escapejs }}', {{ p.selling_price }}, {{ p.stock_quantity }})">
-                        <div class="small text-muted">{{ p.category }}</div>
-                        <div class="fw-semibold text-truncate" title="{{ p.product_name }}">{{ p.product_name }}</div>
-                        <div class="d-flex justify-content-between align-items-center mt-2">
-                            <span class="fw-bold text-primary">₱{{ p.selling_price }}</span>
-                            <span class="badge bg-light text-dark border">Stock: {{ p.stock_quantity }}</span>
+                    <div class="pos-product-card">
+                        <div>
+                            <div class="d-flex justify-content-between align-items-start gap-1 mb-1">
+                                <span class="prod-cat">{{ p.category }}</span>
+                                <span class="stock-pill">{{ p.stock_quantity }} left</span>
+                            </div>
+                            <div class="fw-bold small mb-2">{{ p.product_name }}</div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center pt-1">
+                            <span class="prod-price">₱{{ p.selling_price }}</span>
+                            <i class="bi bi-plus-circle-fill opacity-75"></i>
                         </div>
                     </div>
                 </div>
@@ -44,71 +230,138 @@
         </div>
     </div>
 
-    <!-- Right: Current Sale Cart & Checkout -->
+    <!-- Right Column: Cart & Checkout -->
     <div class="col-lg-5">
-        <div class="card p-3">
-            <h6 class="fw-bold mb-3"><i class="bi bi-cart3 me-1"></i> Current Sale Cart</h6>
-            <div class="table-responsive" style="max-height: 260px; overflow-y: auto;">
-                <table class="table table-sm align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Item</th>
-                            <th style="width: 75px;">Qty</th>
-                            <th class="text-end">Subtotal</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody id="cartBody">
-                        <tr><td colspan="4" class="text-center text-muted py-4">Cart is empty</td></tr>
-                    </tbody>
-                </table>
+        <div class="pos-panel">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="pos-icon-box"><i class="bi bi-receipt"></i></div>
+                    <div>
+                        <h6 class="fw-bold mb-0">Current Bill</h6>
+                        <span class="text-muted small" id="cartCountLabel">0 items</span>
+                    </div>
+                </div>
+                <button type="button" id="clearCartBtn" class="btn btn-sm btn-light text-danger rounded-3">
+                    <i class="bi bi-trash3 me-1"></i>Clear
+                </button>
             </div>
 
-            <hr>
-            <div class="mb-2">
-                <label class="form-label small fw-semibold">Payment Method</label>
-                <select id="paymentMethod" class="form-select form-select-sm" onchange="toggleUtangFields()">
-                    <option value="Cash">Cash</option>
-                    <option value="GCash/E-Wallet">GCash / E-Wallet</option>
-                    <option value="Utang">Utang / Store Credit</option>
-                </select>
+            <!-- Cart Items -->
+            <div class="cart-scroll mb-3" id="cartContainer">
+                <div class="text-center text-muted py-4 small" id="emptyCartMsg">
+                    Cart is empty. Click a product on the left to start.
+                </div>
             </div>
 
-            <div id="customerSection" class="mb-2">
-                <label class="form-label small fw-semibold">Customer (Required for Utang)</label>
-                <select id="customerSelect" class="form-select form-select-sm mb-1">
-                    <option value="">-- Walk-in / New Customer --</option>
+            <!-- Payment Method -->
+            <label class="form-label small fw-semibold text-secondary mb-1">Payment Method</label>
+            <div class="d-flex gap-2 mb-3">
+                <button type="button" class="pay-toggle-btn active" data-method="Cash">
+                    <i class="bi bi-cash-stack me-1"></i>Cash
+                </button>
+                <button type="button" class="pay-toggle-btn" data-method="Utang">
+                    <i class="bi bi-journal-text me-1"></i>Utang / Credit
+                </button>
+            </div>
+
+            <!-- Customer Selection -->
+            <div class="mb-3" id="customerSection">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label class="form-label small fw-semibold text-secondary mb-0" id="customerLabel">Customer (Optional)</label>
+                    <button type="button" id="toggleNewCustomerBtn" class="btn btn-link btn-sm p-0 text-decoration-none" style="color: #4aa8eb; font-size: 0.78rem;">
+                        + New Customer
+                    </button>
+                </div>
+
+                <select id="customerSelect" class="form-select form-select-sm">
+                    <option value="">Walk-in Customer</option>
                     {% for c in customers %}
-                        <option value="{{ c.id }}">{{ c.customer_name }} (Balance: ₱{{ c.current_credit_balance }})</option>
+                        <option value="{{ c.id }}">{{ c.customer_name }} (Bal: ₱{{ c.current_credit_balance }})</option>
                     {% endfor %}
                 </select>
-                <input type="text" id="newCustomerName" class="form-control form-control-sm" placeholder="Or type new customer name...">
+
+                <div class="row g-2 mt-1 d-none" id="newCustomerFields">
+                    <div class="col-6">
+                        <input type="text" id="newCustomerName" class="form-control form-control-sm" placeholder="Customer name">
+                    </div>
+                    <div class="col-6">
+                        <input type="text" id="newCustomerContact" class="form-control form-control-sm" placeholder="Contact #">
+                    </div>
+                </div>
             </div>
 
-            <div class="row g-2 mb-2">
+            <!-- Discount & Cash Tendered -->
+            <div class="row g-2 mb-3">
                 <div class="col-6">
-                    <label class="form-label small fw-semibold">Discount (₱)</label>
-                    <input type="number" id="discountInput" class="form-control form-control-sm" value="0" min="0" step="0.01" oninput="renderCart()">
+                    <label class="form-label small fw-semibold text-secondary mb-1">Discount (₱)</label>
+                    <input type="number" step="0.01" min="0" id="discountInput" class="form-control form-control-sm" value="0">
                 </div>
-                <div class="col-6" id="tenderedBox">
-                    <label class="form-label small fw-semibold">Amount Tendered (₱)</label>
-                    <input type="number" id="tenderedInput" class="form-control form-control-sm" value="0" min="0" step="0.01" oninput="updateChange()">
-                </div>
-            </div>
-
-            <div class="bg-light p-2 rounded mb-3">
-                <div class="d-flex justify-content-between">
-                    <span class="fw-semibold">Total Payable:</span>
-                    <span class="fw-bold fs-5 text-primary" id="totalDisplay">₱0.00</span>
-                </div>
-                <div class="d-flex justify-content-between small text-muted" id="changeRow">
-                    <span>Change Given:</span>
-                    <span class="fw-bold text-success" id="changeDisplay">₱0.00</span>
+                <div class="col-6" id="tenderedGroup">
+                    <label class="form-label small fw-semibold text-secondary mb-1">Amount Tendered (₱)</label>
+                    <input type="number" step="0.01" min="0" id="tenderedInput" class="form-control form-control-sm" placeholder="0.00">
                 </div>
             </div>
 
-            <button class="btn btn-success w-100 py-2 fw-bold" onclick="completeSale()">
-                <i class="bi bi-check-circle me-1"></i> Complete Sale
+            <!-- Quick Cash Pills -->
+            <div class="d-flex flex-wrap gap-1 mb-3" id="quickCashRow">
+                <button type="button" class="quick-cash-btn" data-cash="exact">Exact</button>
+                <button type="button" class="quick-cash-btn" data-cash="50">₱50</button>
+                <button type="button" class="quick-cash-btn" data-cash="100">₱100</button>
+                <button type="button" class="quick-cash-btn" data-cash="200">₱200</button>
+                <button type="button" class="quick-cash-btn" data-cash="500">₱500</button>
+                <button type="button" class="quick-cash-btn" data-cash="1000">₱1,000</button>
+            </div>
+
+            <!-- Totals Summary -->
+            <div class="summary-box mb-3">
+                <div class="d-flex justify-content-between small text-muted mb-1">
+                    <span>Subtotal</span>
+                    <span id="subtotalDisplay">₱0.00</span>
+                </div>
+                <div class="d-flex justify-content-between small text-muted mb-2">
+                    <span>Discount</span>
+                    <span id="discountDisplay">- ₱0.00</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center border-top pt-2 mb-1">
+                    <span class="fw-bold">Total Payable</span>
+                    <span class="fw-bold fs-5" style="color: #4aa8eb;" id="totalDisplay">₱0.00</span>
+                </div>
+                <div class="d-flex justify-content-between small fw-semibold" id="changeRow">
+                    <span class="text-secondary">Change Due</span>
+                    <span class="text-success" id="changeDisplay">₱0.00</span>
+                </div>
+            </div>
+
+            <div id="posErrorAlert" class="alert alert-danger py-2 px-3 small rounded-3 d-none mb-2"></div>
+
+            <button type="button" id="checkoutBtn" class="btn-sky w-100 justify-content-center py-2 fs-6">
+                <i class="bi bi-check2-circle"></i> Complete Checkout
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Receipt Confirmation Modal -->
+<div class="modal fade" id="receiptModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 text-center p-4">
+            <div class="pos-icon-box mx-auto mb-3" style="width:52px;height:52px;font-size:1.5rem;">
+                <i class="bi bi-check-lg"></i>
+            </div>
+            <h5 class="fw-bold mb-1">Sale Completed!</h5>
+            <p class="text-muted small mb-3" id="receiptSaleId">Sale #0</p>
+            <div class="summary-box text-start mb-3">
+                <div class="d-flex justify-content-between small mb-1">
+                    <span class="text-muted">Total Paid:</span>
+                    <span class="fw-bold" id="receiptTotal">₱0.00</span>
+                </div>
+                <div class="d-flex justify-content-between small">
+                    <span class="text-muted">Change:</span>
+                    <span class="fw-bold text-success" id="receiptChange">₱0.00</span>
+                </div>
+            </div>
+            <button type="button" class="btn-sky w-100 justify-content-center" onclick="window.location.reload()">
+                New Transaction
             </button>
         </div>
     </div>
@@ -117,119 +370,250 @@
 
 {% block extra_js %}
 <script>
-let cart = [];
+    const cart = {};
+    let paymentMethod = 'Cash';
+    let isNewCustomer = false;
 
-document.getElementById('posSearch').addEventListener('input', filterProducts);
-document.getElementById('posCategory').addEventListener('change', filterProducts);
+    const searchInput = document.getElementById('posSearch');
+    const categorySelect = document.getElementById('posCategory');
+    const productItems = document.querySelectorAll('.product-item');
+    const cartContainer = document.getElementById('cartContainer');
+    const cartCountLabel = document.getElementById('cartCountLabel');
+    const discountInput = document.getElementById('discountInput');
+    const tenderedInput = document.getElementById('tenderedInput');
+    const errorAlert = document.getElementById('posErrorAlert');
 
-function filterProducts() {
-    const q = document.getElementById('posSearch').value.toLowerCase();
-    const cat = document.getElementById('posCategory').value;
-    document.querySelectorAll('.product-item').forEach(el => {
-        const matchText = el.dataset.name.includes(q) || el.dataset.barcode.includes(q);
-        const matchCat = !cat || el.dataset.category === cat;
-        el.style.display = (matchText && matchCat) ? '' : 'none';
-    });
-}
-
-function addToCart(id, name, price, maxStock) {
-    const existing = cart.find(i => i.id === id);
-    if (existing) {
-        if (existing.quantity < maxStock) {
-            existing.quantity += 1;
-        } else {
-            alert('Maximum available stock reached!');
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
         }
-    } else {
-        cart.push({ id, name, price: parseFloat(price), quantity: 1, maxStock });
+        return cookieValue;
     }
-    renderCart();
-}
 
-function updateQty(index, val) {
-    const qty = parseInt(val);
-    if (qty <= 0) {
-        cart.splice(index, 1);
-    } else if (qty > cart[index].maxStock) {
-        alert('Exceeds available stock!');
-        cart[index].quantity = cart[index].maxStock;
-    } else {
-        cart[index].quantity = qty;
+    function filterProducts() {
+        const term = searchInput.value.trim().toLowerCase();
+        const cat = categorySelect.value;
+        productItems.forEach(item => {
+            const name = item.dataset.name;
+            const barcode = item.dataset.barcode;
+            const itemCat = item.dataset.category;
+            const matchesTerm = !term || name.includes(term) || barcode.includes(term);
+            const matchesCat = !cat || itemCat === cat;
+            item.style.display = (matchesTerm && matchesCat) ? '' : 'none';
+        });
     }
-    renderCart();
-}
 
-function removeItem(index) {
-    cart.splice(index, 1);
-    renderCart();
-}
+    searchInput.addEventListener('input', filterProducts);
+    categorySelect.addEventListener('change', filterProducts);
 
-function getFinalTotal() {
-    const raw = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const discount = parseFloat(document.getElementById('discountInput').value) || 0;
-    return Math.max(0, raw - discount);
-}
-
-function renderCart() {
-    const tbody = document.getElementById('cartBody');
-    if (cart.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">Cart is empty</td></tr>';
-    } else {
-        tbody.innerHTML = cart.map((item, idx) => `
-            <tr>
-                <td class="small fw-semibold">${item.name}</td>
-                <td><input type="number" class="form-control form-control-sm" value="${item.quantity}" min="1" max="${item.maxStock}" onchange="updateQty(${idx}, this.value)"></td>
-                <td class="text-end small">₱${(item.price * item.quantity).toFixed(2)}</td>
-                <td><button class="btn btn-sm text-danger p-0" onclick="removeItem(${idx})"><i class="bi bi-x-lg"></i></button></td>
-            </tr>
-        `).join('');
-    }
-    document.getElementById('totalDisplay').innerText = '₱' + getFinalTotal().toFixed(2);
-    updateChange();
-}
-
-function updateChange() {
-    const total = getFinalTotal();
-    const tendered = parseFloat(document.getElementById('tenderedInput').value) || 0;
-    const change = Math.max(0, tendered - total);
-    document.getElementById('changeDisplay').innerText = '₱' + change.toFixed(2);
-}
-
-function toggleUtangFields() {
-    const method = document.getElementById('paymentMethod').value;
-    document.getElementById('tenderedBox').style.display = (method === 'Utang') ? 'none' : '';
-    document.getElementById('changeRow').style.display = (method === 'Utang') ? 'none' : '';
-}
-
-async function completeSale() {
-    if (cart.length === 0) {
-        alert('Please add items to the cart first.');
-        return;
-    }
-    const payload = {
-        items: cart.map(i => ({ id: i.id, quantity: i.quantity })),
-        payment_method: document.getElementById('paymentMethod').value,
-        discount: document.getElementById('discountInput').value,
-        amount_tendered: document.getElementById('tenderedInput').value,
-        customer_id: document.getElementById('customerSelect').value,
-        new_customer_name: document.getElementById('newCustomerName').value
-    };
-
-    const res = await fetch("{% url 'pos_checkout' %}", {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': '{{ csrf_token }}'
-        },
-        body: JSON.stringify(payload)
+    searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const term = searchInput.value.trim().toLowerCase();
+            if (!term) return;
+            for (const item of productItems) {
+                if (item.dataset.barcode === term) {
+                    addItemToCart(item);
+                    searchInput.value = '';
+                    filterProducts();
+                    return;
+                }
+            }
+        }
     });
-    const data = await res.json();
-    if (data.success) {
-        alert(`Sale #${data.sale_id} completed!\nTotal: ₱${data.total_amount}\nChange: ₱${data.change_given}`);
-        window.location.reload();
-    } else {
-        alert('Error: ' + data.error);
+
+    function addItemToCart(el) {
+        const id = el.dataset.id;
+        const title = el.dataset.title;
+        const price = parseFloat(el.dataset.price);
+        const stock = parseInt(el.dataset.stock, 10);
+
+        if (cart[id]) {
+            if (cart[id].quantity < stock) {
+                cart[id].quantity += 1;
+            }
+        } else {
+            cart[id] = { id: id, name: title, price: price, stock: stock, quantity: 1 };
+        }
+        renderCart();
     }
-}
+
+    productItems.forEach(item => {
+        item.addEventListener('click', () => addItemToCart(item));
+    });
+
+    function renderCart() {
+        const keys = Object.keys(cart);
+        let totalUnits = 0;
+        let subtotal = 0;
+
+        if (keys.length === 0) {
+            cartContainer.innerHTML = '<div class="text-center text-muted py-4 small">Cart is empty. Click a product on the left to start.</div>';
+            cartCountLabel.textContent = '0 items';
+        } else {
+            let html = '';
+            keys.forEach(id => {
+                const item = cart[id];
+                const lineTotal = item.price * item.quantity;
+                totalUnits += item.quantity;
+                subtotal += lineTotal;
+                html += `
+                    <div class="cart-row">
+                        <div class="flex-grow-1">
+                            <div class="fw-bold small">${item.name}</div>
+                            <div class="text-muted" style="font-size:0.74rem;">₱${item.price.toFixed(2)} each</div>
+                        </div>
+                        <div class="d-flex align-items-center gap-1">
+                            <button type="button" class="qty-btn" data-action="dec" data-id="${id}">-</button>
+                            <span class="fw-bold small px-1">${item.quantity}</span>
+                            <button type="button" class="qty-btn" data-action="inc" data-id="${id}">+</button>
+                        </div>
+                        <div class="fw-bold small text-end" style="min-width:68px;">₱${lineTotal.toFixed(2)}</div>
+                    </div>
+                `;
+            });
+            cartContainer.innerHTML = html;
+            cartCountLabel.textContent = totalUnits + (totalUnits === 1 ? ' item' : ' items');
+        }
+
+        updateTotals(subtotal);
+    }
+
+    cartContainer.addEventListener('click', function(e) {
+        const btn = e.target.closest('.qty-btn');
+        if (!btn) return;
+        const id = btn.dataset.id;
+        const action = btn.dataset.action;
+        if (!cart[id]) return;
+
+        if (action === 'inc' && cart[id].quantity < cart[id].stock) {
+            cart[id].quantity += 1;
+        } else if (action === 'dec') {
+            cart[id].quantity -= 1;
+            if (cart[id].quantity <= 0) delete cart[id];
+        }
+        renderCart();
+    });
+
+    function getCurrentTotals() {
+        let subtotal = 0;
+        Object.values(cart).forEach(item => {
+            subtotal += item.price * item.quantity;
+        });
+        const discount = Math.max(0, parseFloat(discountInput.value) || 0);
+        const total = Math.max(0, subtotal - discount);
+        const tendered = Math.max(0, parseFloat(tenderedInput.value) || 0);
+        const change = Math.max(0, tendered - total);
+        return { subtotal, discount, total, tendered, change };
+    }
+
+    function updateTotals(precomputedSubtotal) {
+        const { subtotal, discount, total, change } = getCurrentTotals();
+        const sub = precomputedSubtotal !== undefined ? precomputedSubtotal : subtotal;
+        document.getElementById('subtotalDisplay').textContent = '₱' + sub.toFixed(2);
+        document.getElementById('discountDisplay').textContent = '- ₱' + discount.toFixed(2);
+        document.getElementById('totalDisplay').textContent = '₱' + total.toFixed(2);
+        document.getElementById('changeDisplay').textContent = '₱' + change.toFixed(2);
+    }
+
+    discountInput.addEventListener('input', () => updateTotals());
+    tenderedInput.addEventListener('input', () => updateTotals());
+
+    document.getElementById('clearCartBtn').addEventListener('click', () => {
+        Object.keys(cart).forEach(k => delete cart[k]);
+        discountInput.value = '0';
+        tenderedInput.value = '';
+        errorAlert.classList.add('d-none');
+        renderCart();
+    });
+
+    document.querySelectorAll('.pay-toggle-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.pay-toggle-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            paymentMethod = btn.dataset.method;
+
+            const isUtang = paymentMethod === 'Utang';
+            document.getElementById('customerLabel').textContent = isUtang ? 'Customer (Required for Utang)' : 'Customer (Optional)';
+            document.getElementById('tenderedGroup').style.display = isUtang ? 'none' : '';
+            document.getElementById('quickCashRow').style.display = isUtang ? 'none' : '';
+            document.getElementById('changeRow').style.display = isUtang ? 'none' : '';
+        });
+    });
+
+    document.getElementById('toggleNewCustomerBtn').addEventListener('click', function() {
+        isNewCustomer = !isNewCustomer;
+        document.getElementById('newCustomerFields').classList.toggle('d-none', !isNewCustomer);
+        document.getElementById('customerSelect').classList.toggle('d-none', isNewCustomer);
+        this.textContent = isNewCustomer ? 'Select Existing' : '+ New Customer';
+    });
+
+    document.querySelectorAll('.quick-cash-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const val = btn.dataset.cash;
+            if (val === 'exact') {
+                tenderedInput.value = getCurrentTotals().total.toFixed(2);
+            } else {
+                tenderedInput.value = parseFloat(val).toFixed(2);
+            }
+            updateTotals();
+        });
+    });
+
+    document.getElementById('checkoutBtn').addEventListener('click', async function() {
+        errorAlert.classList.add('d-none');
+        const items = Object.values(cart).map(i => ({ id: i.id, quantity: i.quantity }));
+        if (items.length === 0) {
+            errorAlert.textContent = 'Please add at least one product to the bill.';
+            errorAlert.classList.remove('d-none');
+            return;
+        }
+
+        const payload = {
+            items: items,
+            payment_method: paymentMethod,
+            discount: parseFloat(discountInput.value) || 0,
+            amount_tendered: parseFloat(tenderedInput.value) || 0,
+            customer_id: isNewCustomer ? null : (document.getElementById('customerSelect').value || null),
+            new_customer_name: isNewCustomer ? document.getElementById('newCustomerName').value.trim() : '',
+            new_customer_contact: isNewCustomer ? document.getElementById('newCustomerContact').value.trim() : ''
+        };
+
+        this.disabled = true;
+        try {
+            const response = await fetch("{% url 'pos_checkout' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json();
+            if (data.success) {
+                document.getElementById('receiptSaleId').textContent = 'Transaction #' + data.sale_id;
+                document.getElementById('receiptTotal').textContent = '₱' + parseFloat(data.total_amount).toFixed(2);
+                document.getElementById('receiptChange').textContent = '₱' + parseFloat(data.change_given).toFixed(2);
+                const modal = new bootstrap.Modal(document.getElementById('receiptModal'));
+                modal.show();
+            } else {
+                errorAlert.textContent = data.error || 'Checkout failed.';
+                errorAlert.classList.remove('d-none');
+            }
+        } catch (err) {
+            errorAlert.textContent = 'Network error while completing checkout.';
+            errorAlert.classList.remove('d-none');
+        } finally {
+            this.disabled = false;
+        }
+    });
 </script>
 {% endblock %}
